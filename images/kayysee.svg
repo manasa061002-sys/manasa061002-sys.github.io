@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" width="1600" height="900">
+  <rect width="1600" height="900" fill="#FAFAF6"/>
+  <circle cx="80" cy="110" r="150" fill="#FFF6C2"/>
+  <circle cx="1540" cy="810" r="180" fill="#FFF6C2"/>
+
+  <!-- logo mark: yellow disc with a check, as in the KayYSee favicon -->
+  <circle cx="300" cy="450" r="170" fill="#FFE45C"/>
+  <circle cx="300" cy="450" r="170" fill="none" stroke="#E9C400" stroke-width="6"/>
+  <path d="M212 462 L272 522 L392 386" fill="none" stroke="#111111" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <text x="540" y="430" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="140" font-weight="700" fill="#111111" letter-spacing="-4">KayYSee</text>
+  <text x="546" y="505" font-family="Inter, 'Segoe UI', Arial, sans-serif" font-size="44" font-weight="500" fill="#6B6B66">Re-KYC &amp; customer lifecycle concept</text>
+</svg>
