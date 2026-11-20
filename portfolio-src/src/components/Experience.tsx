@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { experience } from '@/data/portfolio';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useScrollProgress } from '@/lib/useScrollProgress';
+import Scribble from '@/components/Scribble';
 import { Monkey } from '@/components/Critters';
 
 function renderBold(text: string) {
@@ -94,7 +95,7 @@ function SpiralTimeline({ target }: { target: React.RefObject<HTMLDivElement> })
   if (!shape) return null;
   return (
     <div className="absolute left-0 top-0 bottom-0 pointer-events-none" style={{ width: COIL_W }} aria-hidden>
-      <svg width={COIL_W} height={h} className="overflow-visible" fill="none" strokeLinecap="round" strokeLinejoin="round">
+      <svg width={COIL_W} height={h} className="ink-flip overflow-visible" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <defs>
           <clipPath id={clipId}>
             <rect ref={clip} x={-20} y={0} width={COIL_W + 40} height={0} />
@@ -134,6 +135,7 @@ export default function Experience() {
       <div className="relative reveal mb-10">
         <span className="text-[11px] tracking-[0.25em] uppercase text-white/40 font-light">Career</span>
         <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-white tracking-tight">Work Experience</h2>
+        <Scribble className="lg:right-0 lg:bottom-2">the day jobs ↓</Scribble>
       </div>
 
       <div ref={timeline} className="relative">
@@ -142,7 +144,7 @@ export default function Experience() {
         <div className="space-y-10">
           {experience.map((job, i) => (
             <div key={job.company} className="reveal relative pl-16" style={{ transitionDelay: `${i * 100}ms` }}>
-              <div className="group hover:bg-white/[0.02] transition-colors duration-500 rounded-[20px] p-7 -ml-2">
+              <div className="sketch-box group hover:bg-white/[0.02] transition-colors duration-500 rounded-[20px] p-7 -ml-2">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
                   <div>
                     <h3 className="text-xl font-medium text-white">{job.role}</h3>

@@ -5,6 +5,7 @@ import { creativeProjects, type CreativeProject } from '@/data/portfolio';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import CopyBankModal from '@/components/CopyBankModal';
 import Picture from '@/components/Picture';
+import Scribble from '@/components/Scribble';
 import DesignDesk from '@/components/DesignDesk';
 
 export default function Creative() {
@@ -40,17 +41,18 @@ export default function Creative() {
       id="creative"
       data-section="creative"
       ref={ref}
-      className="desk relative overflow-x-clip py-14 sm:py-20"
+      className="zone-keep desk relative overflow-x-clip py-14 sm:py-20"
     >
       {/* ruler ticks along the top edge of the mat */}
       <div className="desk-ruler absolute top-0 inset-x-0 h-3" aria-hidden />
-      <div className="reveal mb-10 px-6 sm:px-10 max-w-5xl mx-auto">
+      <div className="reveal relative mb-10 px-6 sm:px-10 max-w-5xl mx-auto">
         <span className="text-[11px] tracking-[0.25em] uppercase text-emerald-200 font-medium">
           Craft
         </span>
         <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-white tracking-tight">
           Creative Projects & Decks
         </h2>
+        <Scribble className="lg:right-10 lg:bottom-2 !text-pink-300">click anything on the desk</Scribble>
       </div>
 
       <div className="reveal px-6 sm:px-10 lg:px-14">

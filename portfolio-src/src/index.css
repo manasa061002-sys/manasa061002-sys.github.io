@@ -132,8 +132,8 @@ section[id] {
   background-size: 200% auto;
   -webkit-background-clip: text;
   background-clip: text;
-  /* --fill is animated by GSAP: white → dark → transparent (shows the rainbow) */
-  -webkit-text-fill-color: var(--fill, #ffffff);
+  /* --fill-a is animated by GSAP from 1 (plain text colour) to 0 (shows the rainbow) */
+  -webkit-text-fill-color: rgb(var(--c-white) / var(--fill-a, 1));
   animation: gradientShift 8s linear infinite;
 }
 .transition-text ::selection,
@@ -431,3 +431,106 @@ section[id] {
   .bg-set { background-image: var(--bg-set); }
 }
 
+
+/* =====================================================================
+   Analyst / Artist mode (colour variables live in tailwind.config.js)
+   ===================================================================== */
+.zone-dark,
+.zone-light {
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+html[data-mode='analyst'] .zone-light { background-color: #000; }
+html[data-mode='artist'] body { background-color: rgb(250 246 236); }
+html[data-mode='artist'] .zone-light { background-color: rgb(250 246 236); }
+
+/* Analyst: a faint, tight grid behind everything, like squared paper. */
+html[data-mode='analyst'] .zone-dark,
+html[data-mode='analyst'] .zone-light {
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* Artist: paper grain. */
+html[data-mode='artist'] .zone-dark,
+html[data-mode='artist'] .zone-light {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.35 0 0 0 0 0.28 0 0 0 0 0.2 0 0 0 0.09 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+/* Line drawings made for a black page: in Artist mode they flip to dark ink. */
+html[data-mode='artist'] .zone-dark .ink-flip { filter: invert(1) hue-rotate(180deg); }
+
+/* Each section gets one colour from "The other side" for its sketch marks. */
+[data-section] { --sketch: #ec4899; }
+[data-section='about'] { --sketch: #f59e0b; }
+[data-section='experience'] { --sketch: #ec4899; }
+[data-section='research'] { --sketch: #06b6d4; }
+[data-section='products'] { --sketch: #8b5cf6; }
+[data-section='skills'] { --sketch: #22c55e; }
+[data-section='life'] { --sketch: #f59e0b; }
+
+/* Artist: hand-drawn underline under each section heading. The wobble reuses
+   the guide's doodle-boil filter, so the line "boils" like her outline. */
+html[data-mode='artist'] section[id] h2 { position: relative; width: fit-content; }
+html[data-mode='artist'] section[id] h2::after {
+  content: '';
+  position: absolute;
+  left: -0.1em;
+  right: -0.15em;
+  bottom: -0.08em;
+  height: 0.32em;
+  border-bottom: 3px solid var(--sketch);
+  border-radius: 0 0 60% 40% / 0 0 100% 80%;
+  transform: rotate(-1.2deg);
+  filter: url(#doodle-boil);
+  pointer-events: none;
+}
+
+/* Artist: a hand-drawn box around cards (the uneven radius makes the wobble). */
+html[data-mode='artist'] .sketch-box { position: relative; box-shadow: none; }
+html[data-mode='artist'] .sketch-box::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  border: 2px solid rgb(28 25 23 / 0.75);
+  border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+  filter: url(#doodle-boil);
+  pointer-events: none;
+}
+html[data-mode='artist'] .sketch-box:hover::before { border-color: var(--sketch); }
+
+/* Margin notes, in handwriting, only in Artist mode. */
+.scribble { display: none; }
+html[data-mode='artist'] .scribble {
+  display: block;
+  font-family: 'Caveat', 'Cormorant Garamond', cursive;
+  font-weight: 500;
+  color: var(--sketch);
+  line-height: 1.1;
+}
+
+/* The desk is a physical object: in Analyst mode the mat turns charcoal. */
+html[data-mode='analyst'] .desk { background-color: #1c1c1c; }
+
+/* The name glitters in silver (Analyst) or in the palette (Artist). */
+html[data-mode='artist'] .glitter-name {
+  background-image: linear-gradient(110deg, #1c1917 0%, #1c1917 40%, #ec4899 45%, #facc15 50%, #06b6d4 55%, #1c1917 60%, #1c1917 100%);
+}
+
+/* The switch itself: a colour wipe grows out of the toggle (View Transitions).
+   Browsers without it just switch, with the zone colours easing over. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* Tight 1px-gap grids (Analyst) open up into separate sketched cards (Artist). */
+html[data-mode='artist'] .sketch-grid { gap: 1.25rem; background: transparent; }
+html[data-mode='artist'] .sketch-grid > * { background-color: transparent; }
+
+/* Footer name: dark letters only make sense on the light (Artist) footer. */
+html[data-mode='analyst'] .glitter-name-dark {
+  background-image: linear-gradient(110deg, #d6d3d1 0%, #d6d3d1 40%, #ffffff 50%, #d6d3d1 60%, #d6d3d1 100%);
+}

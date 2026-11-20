@@ -22,7 +22,7 @@ const line = (t: Tone) => ({
 export function Bird({ dark = true, className = '' }: { dark?: boolean; className?: string }) {
   const t = dark ? DARK : LIGHT;
   return (
-    <svg viewBox="0 0 70 50" className={`overflow-visible bird-bob ${className}`} aria-hidden>
+    <svg viewBox="0 0 70 50" className={`overflow-visible bird-bob ${dark ? 'ink-flip' : ''} ${className}`} aria-hidden>
       <g {...line(t)}>
         <path d="M14 26 L2 20 L6 30 Z" />
         <path d="M12 28 C 14 16, 34 12, 44 20 C 50 26, 46 38, 32 40 C 20 41, 12 36, 12 28 Z" />
@@ -200,7 +200,7 @@ export function HoneyPot({ className = '' }: { className?: string }) {
 export function GlassesOwl({ className = '', tone = 'dark' }: { className?: string; tone?: ToneName }) {
   const { ink, paper } = TONE[tone];
   return (
-    <svg viewBox="0 0 80 80" className={`overflow-visible ${className}`} aria-hidden>
+    <svg viewBox="0 0 80 80" className={`overflow-visible ${tone === 'dark' ? 'ink-flip' : ''} ${className}`} aria-hidden>
       <g stroke={ink} fill={paper} strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
         {/* wings */}
         <path className="owl-wing-l" d="M21 40 C 6 34, 4 54, 16 61 C 18 53, 20 47, 21 40 Z" style={{ transformBox: 'view-box', transformOrigin: '21px 42px' }} />
@@ -232,7 +232,7 @@ export function GlassesOwl({ className = '', tone = 'dark' }: { className?: stri
 export function Elephant({ className = '', tone = 'dark', spray = 'arc' }: { className?: string; tone?: ToneName; spray?: 'arc' | 'tall' }) {
   const { ink, paper } = TONE[tone];
   return (
-    <svg viewBox="0 0 160 110" className={`overflow-visible ${className}`} aria-hidden>
+    <svg viewBox="0 0 160 110" className={`overflow-visible ${tone === 'dark' ? 'ink-flip' : ''} ${className}`} aria-hidden>
       <g stroke={ink} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
         {/* water spray: drops travel along an arc up and to the right */}
         {Array.from({ length: 12 }).map((_, i) => (

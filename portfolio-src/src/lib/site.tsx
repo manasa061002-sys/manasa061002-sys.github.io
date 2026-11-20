@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from 'react';
+import { flushSync } from 'react-dom';
 import { m, AnimatePresence, useReducedMotion } from 'motion/react';
 import type Lenis from 'lenis';
 import { profile } from '@/data/portfolio';
@@ -51,9 +52,26 @@ export const sections = [
   { id: 'life', label: 'Life' },
 ];
 
+export type Mode = 'analyst' | 'artist';
+const MODE_KEY = 'mr-mode';
+
+/** The saved mode (also applied to <html> by the inline script in index.html before first paint). */
+function readMode(): Mode {
+  try {
+    return localStorage.getItem(MODE_KEY) === 'artist' ? 'artist' : 'analyst';
+  } catch {
+    return 'analyst';
+  }
+}
+
+type ViewTransitionDoc = Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } };
+
 type SiteState = {
+  /** True when the page is ink on paper (Artist mode); used for nav and guide colours. */
   light: boolean;
-  setLight: (v: boolean) => void;
+  mode: Mode;
+  /** Switch mode; `from` is the point the colour wipe grows out of (the toggle). */
+  switchMode: (next: Mode, from?: { x: number; y: number }) => void;
   active: string;
   toast: (msg: string) => void;
   copyEmail: () => void;
@@ -73,7 +91,8 @@ export function useSite() {
 
 export function SiteProvider({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion();
-  const [light, setLight] = useState(false);
+  const [mode, setMode] = useState<Mode>(readMode);
+  const light = mode === 'artist';
   const [active, setActive] = useState('intro');
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -136,6 +155,45 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     return () => io.disconnect();
   }, [sectionsKey]);
 
+  // Keep <html data-mode> in step (the inline script set it before paint).
+  useEffect(() => {
+    document.documentElement.dataset.mode = mode;
+  }, [mode]);
+
+  const switchMode = useCallback(
+    (next: Mode, from?: { x: number; y: number }) => {
+      try {
+        localStorage.setItem(MODE_KEY, next);
+      } catch {
+        /* private mode etc.: the choice just won't be remembered */
+      }
+      const apply = () => {
+        document.documentElement.dataset.mode = next;
+        flushSync(() => setMode(next));
+      };
+      const doc = document as ViewTransitionDoc;
+      if (reduced || !doc.startViewTransition) {
+        // No View Transitions (or reduced motion): switch at once; colours
+        // ease over via the CSS transition on the zones.
+        apply();
+        return;
+      }
+      const x = from?.x ?? window.innerWidth - 40;
+      const y = from?.y ?? 32;
+      const r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
+      const vt = doc.startViewTransition(apply);
+      vt.ready
+        .then(() => {
+          document.documentElement.animate(
+            { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
+            { duration: 700, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', pseudoElement: '::view-transition-new(root)' },
+          );
+        })
+        .catch(() => {});
+    },
+    [reduced],
+  );
+
   const toast = useCallback((msg: string) => {
     setToastMsg(msg);
     window.clearTimeout(toastTimer.current);
@@ -163,7 +221,8 @@ export function SiteProvider({ children }: { children: ReactNode }) {
   const value = useMemo(
     () => ({
       light,
-      setLight,
+      mode,
+      switchMode,
       active,
       toast,
       copyEmail,
@@ -172,7 +231,7 @@ export function SiteProvider({ children }: { children: ReactNode }) {
       setPaletteOpen,
       sectionsMounted,
     }),
-    [light, active, toast, copyEmail, downloadCv, paletteOpen, sectionsMounted],
+    [light, mode, switchMode, active, toast, copyEmail, downloadCv, paletteOpen, sectionsMounted],
   );
 
   return (

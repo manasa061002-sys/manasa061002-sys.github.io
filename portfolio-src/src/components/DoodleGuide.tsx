@@ -140,7 +140,7 @@ const POP_AT = 6; // clicks within POP_WINDOW_MS
 const POP_WINDOW_MS = 5000;
 
 export default function DoodleGuide() {
-  const { active, light } = useSite();
+  const { active, light, mode } = useSite();
   const reduced = !!useReducedMotion();
   const [bubble, setBubble] = useState(true);
   const [quip, setQuip] = useState<string | null>(null);
@@ -486,6 +486,29 @@ export default function DoodleGuide() {
 
               {/* body */}
               <path d="M46 76 C 55 74, 65 74, 74 76 L 78 113 C 66 115, 54 115, 42 113 Z" />
+              {/* outfit: a blazer for the Analyst, paint-splattered overalls for the Artist */}
+              {mode === 'analyst' ? (
+                <g strokeWidth="2">
+                  <path d="M46 76 C 55 74, 65 74, 74 76 L 78 113 C 66 115, 54 115, 42 113 Z" fill="#27272a" />
+                  <path d="M54 76 L60 89 L66 76 Z" fill="#ffffff" />
+                  <path d="M51 76 L57 99 M69 76 L63 99" fill="none" />
+                  <circle cx="60" cy="101" r="1.5" fill={ink} stroke="none" />
+                  <circle cx="60" cy="107" r="1.5" fill={ink} stroke="none" />
+                  <path d="M66 104 L73 103" fill="none" />
+                </g>
+              ) : (
+                <g strokeWidth="2">
+                  <path d="M49 91 L71 91 L77 113 C 66 115, 54 115, 43 113 Z" fill="#7dd3fc" />
+                  <path d="M51 91 L48 77 M69 91 L72 77" fill="none" stroke="#0369a1" strokeWidth="2.6" />
+                  <rect x="55" y="95" width="10" height="7" rx="1" fill="#bae6fd" />
+                  <circle cx="51" cy="106" r="2.2" fill="#ec4899" stroke="none" />
+                  <circle cx="67" cy="99" r="1.8" fill="#facc15" stroke="none" />
+                  <circle cx="71" cy="109" r="1.6" fill="#22c55e" stroke="none" />
+                  <circle cx="58" cy="110" r="1.4" fill="#a855f7" stroke="none" />
+                  <circle cx="63" cy="106" r="1.1" fill="#ec4899" stroke="none" />
+                  <circle cx="47" cy="111" r="1.2" fill="#f59e0b" stroke="none" />
+                </g>
+              )}
               <path d="M60 68 L60 75" fill="none" />
               {/* hair, back layer */}
               <path d="M35 40 C 30 56, 31 70, 37 80 M85 40 C 90 56, 89 70, 83 80" fill="none" />

@@ -3,6 +3,7 @@ import { MapPin, Linkedin, Quote } from 'lucide-react';
 import { m, AnimatePresence, animate, useInView } from 'motion/react';
 import { profile, stats, countries, greetings } from '@/data/portfolio';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
+import Scribble from '@/components/Scribble';
 import { useReducedMotionSafe } from '@/lib/useReducedMotionSafe';
 
 const RubiksCube = lazy(() => import('./RubiksCube'));
@@ -177,7 +178,7 @@ function CountryPath() {
   const d = `M${pts[0].x},${pts[0].y} Q190,96 ${pts[1].x},${pts[1].y} Q140,10 ${pts[2].x},${pts[2].y} Q48,16 ${pts[3].x},${pts[3].y}`;
   const show = inView || reduced;
   return (
-    <svg ref={ref} viewBox="0 0 250 100" className="mt-5 w-full max-w-[260px] h-auto overflow-visible" aria-hidden>
+    <svg ref={ref} viewBox="0 0 250 100" className="ink-flip mt-5 w-full max-w-[260px] h-auto overflow-visible" aria-hidden>
       <defs>
         <mask id="route-mask">
           <m.path
@@ -373,6 +374,7 @@ export default function About() {
 
         {/* Right: Rubik's cube */}
         <div className="reveal relative" style={{ transitionDelay: '120ms' }}>
+          <Scribble className="lg:-top-2 lg:right-0">go on, give it a spin ↓</Scribble>
           <LazyCube />
           <p className="text-center text-[11px] tracking-wide text-white/30 mt-2">
             Drag to spin it around
@@ -381,11 +383,11 @@ export default function About() {
       </div>
 
       {/* Stats */}
-      <div className="mt-12 grid sm:grid-cols-3 gap-px bg-white/10">
+      <div className="sketch-grid mt-12 grid sm:grid-cols-3 gap-px bg-white/10">
         {stats.map((s, i) => (
           <div
             key={s.label}
-            className="reveal bg-black p-8 group hover:bg-white/[0.03] transition-colors duration-500"
+            className="sketch-box reveal bg-black p-8 group hover:bg-white/[0.03] transition-colors duration-500"
             style={{ transitionDelay: `${i * 80}ms` }}
           >
             <div className="text-5xl sm:text-6xl font-medium text-white">

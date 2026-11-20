@@ -15,16 +15,19 @@ const PIN_VH = 130;
  * As it scrolls into view the grid draws itself in and colour starts to bleed
  * through the columns, so there is never a blank screen. Then it pins (GSAP
  * ScrollTrigger) while you scroll: the columns widen into colour bands, the
- * background moves from black to white and the bands lift off the headline.
+ * bands lift off the headline, which turns rainbow. It now invites you to try
+ * the Analyst / Artist switch in the nav (with a button to flip it here too).
+ * Colours come from the theme, so it works on black (Analyst) and paper (Artist).
  * The section ends 40vh early (negative margin), so Product Concepts slides up
  * under the headline while it is still pinned instead of after a blank half
- * screen. That bottom part of the stage is empty white, so nothing is hidden.
+ * screen. That bottom part of the stage is empty, so nothing is hidden.
  *
  * The section reserves its full scroll height in CSS (pinSpacing: false), and
  * the start state is plain CSS, so GSAP can load lazily without layout jumps.
  */
 export default function Transition() {
-  const { setLight } = useSite();
+  const { mode, switchMode } = useSite();
+  const other = mode === 'analyst' ? 'artist' : 'analyst';
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
 
@@ -73,33 +76,15 @@ export default function Transition() {
           .to(q('[data-fill]'), { scaleX: 1, duration: 0.4, stagger: { each: 0.02, from: 'center' } }, 0.02)
           .fromTo(q('[data-t-line1]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2 }, 0.2)
           .fromTo(q('[data-t-line2]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2 }, 0.28)
-          .to(st, { backgroundColor: '#ffffff', duration: 0.5 }, 0.3)
           .to(q('[data-fill]'), { scaleY: 0, duration: 0.22, stagger: { each: 0.01, from: 'edges' } }, 0.56)
-          // Text goes dark as the page turns white, then turns rainbow once the
-          // colour bands have lifted away.
-          .to(q('[data-t-text]'), { '--fill': 'rgba(17,24,39,1)', color: '#111827', duration: 0.12 }, 0.5)
-          .to(q('[data-t-text]'), { '--fill': 'rgba(17,24,39,0)', duration: 0.18 }, 0.7)
+          // The lettering turns rainbow once the colour bands have lifted away.
+          .to(q('[data-t-text]'), { '--fill-a': 0, duration: 0.18 }, 0.7)
           .to(q('[data-t-arrow]'), { opacity: 0, duration: 0.1 }, 0.85);
 
       });
 
       revert = () => mm.revert();
     };
-
-    // Nav theme: light once the section is ~55% through (or its middle has
-    // passed the top when reduced motion is on). Measured only while scrolling.
-    const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
-    let raf = 0;
-    const checkLight = () => {
-      raf = 0;
-      const r = el.getBoundingClientRect();
-      const vh = window.innerHeight;
-      setLight(rm.matches ? r.top + r.height / 2 < 0 : r.top < -0.55 * (PIN_VH / 100) * vh);
-    };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(checkLight);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
 
     // Wire up once the section is within ~2 screens. Its height is reserved in
     // CSS, so setting up late (even mid-scroll) never shifts the page.
@@ -109,12 +94,9 @@ export default function Transition() {
     return () => {
       cancelled = true;
       io.disconnect();
-      window.removeEventListener('scroll', onScroll);
-      cancelAnimationFrame(raf);
-      setLight(false);
       revert();
     };
-  }, [setLight]);
+  }, []);
 
   return (
     <section
@@ -123,13 +105,13 @@ export default function Transition() {
       className="relative motion-safe:mb-[-40vh] motion-reduce:!h-[70vh]"
       style={{ height: `${100 + PIN_VH}vh` }}
     >
-      <div ref={stage} className="relative h-screen overflow-hidden motion-reduce:h-[70vh]" style={{ background: '#000' }}>
+      <div ref={stage} className="relative h-screen overflow-hidden motion-reduce:h-[70vh] bg-black">
         {/* Static fallback for reduced motion */}
         <div
           className="hidden motion-reduce:block absolute inset-0"
           style={{
             background:
-              'linear-gradient(to bottom, #000000 0%, #1a0a2e 30%, #ec4899 55%, #facc15 68%, #06b6d4 80%, #ffffff 100%)',
+              'linear-gradient(to bottom, rgb(var(--c-black)) 0%, #ec4899 35%, #facc15 50%, #06b6d4 65%, #a855f7 80%, rgb(var(--c-black)) 100%)',
           }}
         />
 
@@ -154,7 +136,7 @@ export default function Transition() {
 
         <div
           className="transition-text relative z-10 h-full flex flex-col items-center justify-center px-6 text-white"
-          style={{ ['--fill' as string]: 'rgba(255,255,255,1)' }}
+          style={{ ['--fill-a' as string]: 1 }}
           data-t-text
         >
           <p data-t-kicker className="rainbow-text text-[11px] tracking-[0.3em] uppercase opacity-80 mb-6">
@@ -164,7 +146,16 @@ export default function Transition() {
             <span data-t-line1 className="rainbow-text block pb-1">Where structure</span>
             <span data-t-line2 className="rainbow-text block italic pb-2 pr-2">meets color</span>
           </h2>
-          <ArrowDown data-t-arrow className="mt-10 h-5 w-5 opacity-60 motion-safe:animate-bounce" />
+          {/* The invitation to try the mode switch in the nav. */}
+          <p className="mt-8 font-serif italic text-xl sm:text-2xl text-center text-white/80">Flip the switch up top.</p>
+          <button
+            type="button"
+            onClick={(e) => switchMode(other, { x: e.clientX, y: e.clientY })}
+            className="mt-4 rounded-full border border-white/30 px-5 py-2 text-[13px] text-white/80 hover:text-white hover:border-white/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+          >
+            {other === 'artist' ? 'Or try Artist mode right here' : 'Or go back to Analyst mode'}
+          </button>
+          <ArrowDown data-t-arrow className="mt-8 h-5 w-5 opacity-60 motion-safe:animate-bounce" />
         </div>
       </div>
     </section>

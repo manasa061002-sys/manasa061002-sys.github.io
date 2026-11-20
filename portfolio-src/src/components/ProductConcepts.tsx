@@ -6,6 +6,7 @@ import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useScrollLock } from '@/lib/site';
 import { Snail } from '@/components/Critters';
 import Picture, { bgSet } from '@/components/Picture';
+import Scribble from '@/components/Scribble';
 import Roamer from '@/components/Roamer';
 
 /**
@@ -254,11 +255,12 @@ export default function ProductConcepts() {
         <Snail className="w-12 sm:w-14" />
       </Roamer>
 
-      <div className="reveal mb-8">
+      <div className="reveal relative mb-8">
         <span className="text-[11px] tracking-[0.25em] uppercase text-cyan-600 font-medium">Innovation</span>
         <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-gray-900 tracking-tight">
           Product Concepts & Prototypes
         </h2>
+        <Scribble className="lg:right-0 lg:-bottom-4">these are live, click around!</Scribble>
       </div>
 
       {/* The selected project, live: click around, scroll, read. */}

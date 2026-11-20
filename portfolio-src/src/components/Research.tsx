@@ -3,6 +3,7 @@ import { m } from 'motion/react';
 import { X, Calendar, Target, FlaskConical } from 'lucide-react';
 import { research, type ResearchPaper } from '@/data/portfolio';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
+import Scribble from '@/components/Scribble';
 import { GlassesOwl } from '@/components/Critters';
 
 /**
@@ -78,11 +79,12 @@ export default function Research() {
         <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-white tracking-tight">
           Academic Research
         </h2>
+        <Scribble className="lg:right-0 lg:bottom-2">hover a paper, the owl will follow</Scribble>
       </div>
 
       <div className="relative">
       <TileOwl grid={grid} hovered={hovered} />
-      <div ref={grid} className="grid sm:grid-cols-2 gap-px bg-white/10">
+      <div ref={grid} className="sketch-grid grid sm:grid-cols-2 gap-px bg-white/10">
         {research.map((paper, i) => (
           <button
             key={paper.id}
@@ -91,7 +93,7 @@ export default function Research() {
             onMouseLeave={() => setHovered(null)}
             onFocus={() => setHovered(i)}
             onBlur={() => setHovered(null)}
-            className="reveal text-left group bg-black p-8 hover:bg-white/[0.03] transition-colors duration-500"
+            className="sketch-box reveal text-left group bg-black p-8 hover:bg-white/[0.03] transition-colors duration-500"
             style={{ transitionDelay: `${i * 80}ms` }}
           >
             <div className="flex items-start justify-between gap-3">

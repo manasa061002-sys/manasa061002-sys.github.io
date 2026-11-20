@@ -4,9 +4,13 @@ import { m, useSpring } from 'motion/react';
 import { useScrollProgress } from '@/lib/useScrollProgress';
 import { scrollToId, sections, useSite } from '@/lib/site';
 import { paletteShortcut } from '@/lib/platform';
+import ModeSwitch from '@/components/ModeSwitch';
 
 export default function NavBar({ onHome }: { onHome: () => void }) {
-  const { light, setPaletteOpen } = useSite();
+  const { setPaletteOpen } = useSite();
+  // The nav lives in the dark zone, so these classes follow the theme on their
+  // own (black + white in Analyst, paper + ink in Artist).
+  const light = false;
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   // '⌘K' on a Mac, 'Ctrl K' elsewhere, hidden on touch screens.
@@ -56,6 +60,13 @@ export default function NavBar({ onHome }: { onHome: () => void }) {
         >
           <span className="font-serif text-lg">MR</span>
         </button>
+        {/* Analyst / Artist (icons only until there is room for the labels) */}
+        <div className="hidden md:block lg:hidden">
+          <ModeSwitch compact />
+        </div>
+        <div className="hidden lg:block ml-1">
+          <ModeSwitch />
+        </div>
         </div>
 
         {/* Desktop */}
@@ -64,7 +75,7 @@ export default function NavBar({ onHome }: { onHome: () => void }) {
             <button
               key={l.id}
               onClick={() => go(l.id)}
-              className={`px-3.5 py-1.5 text-[13px] transition-colors duration-300 rounded-full ${muted}`}
+              className={`px-2 lg:px-3 py-1.5 text-[13px] transition-colors duration-300 rounded-full ${muted}`}
             >
               {l.label}
             </button>
@@ -89,7 +100,9 @@ export default function NavBar({ onHome }: { onHome: () => void }) {
           )}
         </div>
 
-        {/* Mobile toggle */}
+        {/* Mobile: the mode switch (icons only) and the menu */}
+        <div className="md:hidden flex items-center gap-4">
+        <ModeSwitch compact />
         <button
           onClick={() => setOpen(!open)}
           aria-label={open ? 'Close menu' : 'Open menu'}
@@ -98,6 +111,7 @@ export default function NavBar({ onHome }: { onHome: () => void }) {
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
+        </div>
       </nav>
 
       {/* Scroll progress */}

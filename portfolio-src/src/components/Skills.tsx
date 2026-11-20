@@ -1,6 +1,7 @@
 import { Bot, Boxes, GraduationCap, HeartHandshake, TrendingUp } from 'lucide-react';
 import { skills } from '@/data/portfolio';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
+import Scribble from '@/components/Scribble';
 import { Bee, HoneyPot } from '@/components/Critters';
 
 export default function Skills() {
@@ -32,12 +33,13 @@ export default function Skills() {
           Skills & Certifications
           <HoneyPot className="inline-block align-middle ml-3 w-12 sm:w-16 -mt-3" />
         </h2>
+        <Scribble className="lg:right-0 lg:bottom-2">the toolkit, buzzing</Scribble>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-6">
         {/* Core — pink, split by role */}
         <div
-          className="reveal sm:col-span-2 rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-pink-400"
+          className="sketch-box reveal sm:col-span-2 rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-pink-400"
           style={{ transitionDelay: '0ms' }}
         >
           <h3 className="text-[11px] tracking-[0.15em] uppercase text-pink-500 font-medium mb-6">
@@ -70,7 +72,7 @@ export default function Skills() {
 
         {/* Tools — cyan */}
         <div
-          className="reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-cyan-400"
+          className="sketch-box reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-cyan-400"
           style={{ transitionDelay: '80ms' }}
         >
           <h3 className="text-[11px] tracking-[0.15em] uppercase text-cyan-500 font-medium mb-5">
@@ -90,7 +92,7 @@ export default function Skills() {
 
         {/* AI — yellow */}
         <div
-          className="reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-yellow-400"
+          className="sketch-box reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-yellow-400"
           style={{ transitionDelay: '160ms' }}
         >
           <div className="flex items-center gap-2 text-yellow-500 mb-5">
@@ -113,7 +115,7 @@ export default function Skills() {
 
         {/* Certifications — violet */}
         <div
-          className="reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-violet-400"
+          className="sketch-box reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-violet-400"
           style={{ transitionDelay: '240ms' }}
         >
           <div className="flex items-center gap-2 text-violet-500 mb-5">
@@ -137,7 +139,7 @@ export default function Skills() {
 
         {/* Soft skills — emerald */}
         <div
-          className="reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-emerald-400"
+          className="sketch-box reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-emerald-400"
           style={{ transitionDelay: '320ms' }}
         >
           <div className="flex items-center gap-2 text-emerald-500 mb-5">

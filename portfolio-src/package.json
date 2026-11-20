@@ -12,6 +12,7 @@
     "images": "node scripts/optimize-images.mjs"
   },
   "dependencies": {
+    "@fontsource/caveat": "^5.3.0",
     "@fontsource/cormorant-garamond": "^5.3.0",
     "@fontsource/inter": "^5.3.0",
     "@types/three": "^0.186.0",

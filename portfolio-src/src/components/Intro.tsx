@@ -48,7 +48,7 @@ export default function Intro() {
           <svg
             key={i}
             viewBox="0 0 20 20"
-            className="sparkle absolute w-3 h-3 sm:w-4 sm:h-4"
+            className="sparkle ink-flip absolute w-3 h-3 sm:w-4 sm:h-4"
             style={{ left: p.l, top: p.t, animationDelay: `${0.25 + i * 0.15}s` }}
           >
             <path d="M10 0 L11.2 8.8 L20 10 L11.2 11.2 L10 20 L8.8 11.2 L0 10 L8.8 8.8 Z" fill="#ffffff" />

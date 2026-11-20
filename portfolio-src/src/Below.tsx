@@ -51,7 +51,7 @@ export default function Below() {
           <div key={i}>{render()}</div>
         ))}
         {light.length > 0 && (
-          <div className="bg-white">
+          <div className="zone-light bg-white">
             {light.map((render, i) => (
               <div key={i}>{render()}</div>
             ))}

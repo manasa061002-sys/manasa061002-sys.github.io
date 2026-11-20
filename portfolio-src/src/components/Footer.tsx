@@ -5,7 +5,7 @@ import { Elephant } from '@/components/Critters';
 
 export default function Footer() {
   return (
-    <footer className="relative bg-white" data-section="footer">
+    <footer className="zone-light relative bg-white" data-section="footer">
       {/* Gradient strip at top — the colorful world's closing ribbon */}
       <div
         className="absolute top-0 left-0 right-0 h-1"

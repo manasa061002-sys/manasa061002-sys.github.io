@@ -6,6 +6,7 @@ import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useScrollLock } from '@/lib/site';
 import { LickingCat, WalkingCat } from '@/components/Critters';
 import Roamer from '@/components/Roamer';
+import Scribble from '@/components/Scribble';
 import Picture from '@/components/Picture';
 
 /**
@@ -198,6 +199,7 @@ export default function Gallery() {
       <div className="relative reveal mb-8">
         <span className="text-[11px] tracking-[0.25em] uppercase text-cyan-600 font-medium">Beyond Work</span>
         <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-gray-900 tracking-tight">Life & Interests</h2>
+        <Scribble className="lg:right-0 lg:bottom-2">can you find all four groups?</Scribble>
       </div>
 
       <div className="reveal max-w-2xl mx-auto">
