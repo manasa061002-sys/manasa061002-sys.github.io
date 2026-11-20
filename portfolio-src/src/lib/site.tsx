@@ -28,6 +28,13 @@ export function scrollToId(id: string) {
   else el.scrollIntoView();
 }
 
+/** Scroll an element to about a third of the way down the screen. */
+export function scrollToEl(el: Element) {
+  const offset = -Math.round(window.innerHeight / 3);
+  if (lenis) lenis.scrollTo(el as HTMLElement, { offset });
+  else window.scrollTo({ top: el.getBoundingClientRect().top + window.scrollY + offset });
+}
+
 /** Pause page scrolling while a modal is open. */
 export function useScrollLock(locked: boolean) {
   useEffect(() => {

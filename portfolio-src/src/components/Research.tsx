@@ -63,6 +63,7 @@ export default function Research() {
   const [active, setActive] = useState<ResearchPaper | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const grid = useRef<HTMLDivElement>(null);
+  const lastPointer = useRef('mouse');
   const ref = useScrollReveal<HTMLDivElement>();
 
   return (
@@ -84,42 +85,68 @@ export default function Research() {
 
       <div className="relative">
       <TileOwl grid={grid} hovered={hovered} />
-      <div ref={grid} className="sketch-grid grid sm:grid-cols-2 gap-px bg-white/10">
-        {research.map((paper, i) => (
-          <button
-            key={paper.id}
-            onClick={() => setActive(paper)}
-            onMouseEnter={() => setHovered(i)}
-            onMouseLeave={() => setHovered(null)}
-            onFocus={() => setHovered(i)}
-            onBlur={() => setHovered(null)}
-            className="sketch-box reveal text-left group bg-black p-8 hover:bg-white/[0.03] transition-colors duration-500"
-            style={{ transitionDelay: `${i * 80}ms` }}
-          >
-            <div className="flex items-start justify-between gap-3">
-              <span className="text-[10px] tracking-wide px-2.5 py-0.5 rounded-full border border-white/15 text-white/50">
-                {paper.type}
-              </span>
-              <span className="text-[11px] text-white/30">{paper.period}</span>
-            </div>
-            <h3 className="mt-5 text-xl font-medium text-white group-hover:text-white transition-colors duration-300">
-              {paper.title}
-            </h3>
-            <p className="mt-3 text-[13px] text-white/50 leading-[1.65] line-clamp-2 font-light">
-              {paper.summary}
-            </p>
-            <div className="mt-5 flex flex-wrap gap-1.5">
-              {paper.methods.slice(0, 3).map((m) => (
-                <span
-                  key={m}
-                  className="text-[10px] px-2 py-0.5 rounded-full text-white/30 border border-white/10"
-                >
-                  {m}
-                </span>
-              ))}
-            </div>
-          </button>
-        ))}
+      {/* The filing tray: each paper is a document filed in it. Hover, focus or
+          tap one to pull it out; a "Key finding" stamp lands on it. On touch
+          screens the first tap pulls it out, the second opens it. */}
+      <div className="doc-tray relative rounded-b-[18px] border border-white/10 border-t-0 bg-white/[0.02] px-3 sm:px-5 pt-6">
+        <div ref={grid} className="grid sm:grid-cols-2 gap-4 sm:gap-5">
+          {research.map((paper, i) => {
+            const lifted = hovered === i;
+            return (
+              <button
+                key={paper.id}
+                data-evidence={`research-${paper.id}`}
+                onPointerDown={(e) => (lastPointer.current = e.pointerType)}
+                onClick={() => {
+                  if (lastPointer.current === 'touch' && !lifted) {
+                    setHovered(i);
+                    return;
+                  }
+                  setActive(paper);
+                }}
+                onMouseEnter={() => setHovered(i)}
+                onMouseLeave={() => setHovered(null)}
+                onFocus={() => setHovered(i)}
+                onBlur={() => setHovered(null)}
+                aria-label={`${paper.title}. Open details.`}
+                // Keep className fixed: useScrollReveal adds 'revealed' to it by hand.
+                className="reveal relative rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
+                style={{ transitionDelay: `${i * 80}ms`, zIndex: lifted ? 5 : undefined }}
+              >
+                <div className={`doc sketch-box relative ${lifted ? 'doc-lifted' : ''}`}>
+                  {/* folder tab with the kind of paper */}
+                  <span className="doc-tab absolute -top-5 left-5 rounded-t-lg border border-b-0 border-white/15 bg-white/[0.06] px-3 py-0.5 text-[10px] tracking-wide text-white/60">
+                    {paper.type}
+                  </span>
+                  <div className="doc-paper rounded-xl rounded-tl-none border border-white/15 bg-white/[0.05] p-6 sm:p-7 pb-12">
+                    <div className="flex justify-end">
+                      <span className="text-[11px] text-white/40">{paper.period}</span>
+                    </div>
+                    <h3 className="mt-2 text-xl font-medium text-white">{paper.title}</h3>
+                    <p className="mt-3 text-[13px] text-white/55 leading-[1.65] line-clamp-2 font-light">{paper.summary}</p>
+                    {paper.keyFinding && (
+                      <p className={`doc-finding mt-3 text-[13px] text-white/80 leading-[1.6] ${lifted ? 'is-shown' : ''}`}>{paper.keyFinding}</p>
+                    )}
+                    <div className="mt-5 flex flex-wrap gap-1.5">
+                      {paper.methods.slice(0, 3).map((m) => (
+                        <span key={m} className="text-[10px] px-2 py-0.5 rounded-full text-white/40 border border-white/10">
+                          {m}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {/* the stamp */}
+                  <span aria-hidden className={`doc-stamp ${lifted ? 'is-stamped' : ''}`}>
+                    Key finding
+                  </span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+        {/* the front lip of the tray, in front of the bottom of each document */}
+        <div aria-hidden className="doc-lip pointer-events-none absolute inset-x-0 bottom-0 h-9 rounded-b-[18px] border-t border-white/15 bg-black" />
+        <div className="h-4" />
       </div>
       </div>
 

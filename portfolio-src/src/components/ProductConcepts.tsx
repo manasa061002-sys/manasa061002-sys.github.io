@@ -8,6 +8,7 @@ import { Snail } from '@/components/Critters';
 import Picture, { bgSet } from '@/components/Picture';
 import Scribble from '@/components/Scribble';
 import Roamer from '@/components/Roamer';
+import MetricChart from '@/components/MetricChart';
 
 /**
  * The screenshot inside a device. On hover (or keyboard focus) it scrolls from
@@ -123,6 +124,7 @@ function Tile({ p, onClose }: { p: ProductConcept; onClose: () => void }) {
             {p.period}
           </div>
           <p className="mt-5 text-[14px] text-gray-600 leading-[1.75]">{p.summary}</p>
+          {p.metric && <MetricChart {...p.metric} onLight />}
           {p.note && (
             <p className="mt-3 px-3 py-2 rounded-[10px] bg-amber-100 text-amber-800 text-[12px] leading-relaxed">{p.note}</p>
           )}
@@ -295,6 +297,7 @@ export default function ProductConcepts() {
             <button
               key={p.id}
               onClick={() => setCurrent(p)}
+              data-evidence={`product-${p.id}`}
               aria-pressed={on}
               aria-label={`Show ${p.title}`}
               className={`group relative h-[150px] flex items-center justify-center rounded-2xl transition-all duration-300 ${

@@ -387,6 +387,7 @@ export default function About() {
         {stats.map((s, i) => (
           <div
             key={s.label}
+            data-evidence={s.value === '1st' ? 'stat-bloomberg' : undefined}
             className="sketch-box reveal bg-black p-8 group hover:bg-white/[0.03] transition-colors duration-500"
             style={{ transitionDelay: `${i * 80}ms` }}
           >

@@ -3,9 +3,26 @@ import { skills } from '@/data/portfolio';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import Scribble from '@/components/Scribble';
 import { Bee, HoneyPot } from '@/components/Critters';
+import { SeenIn, SkillChip, useActiveSkill } from '@/components/SkillEvidence';
+
+const PINK = 'bg-pink-50 border-pink-200/50 hover:border-pink-400 hover:bg-pink-100/50';
+const CYAN = 'bg-cyan-50 border-cyan-200/50 hover:border-cyan-400 hover:bg-cyan-100/50';
+const YELLOW = 'bg-yellow-50 border-yellow-200/50 hover:border-yellow-400 hover:bg-yellow-100/50';
+const EMERALD = 'bg-emerald-50 border-emerald-200/50 hover:border-emerald-400 hover:bg-emerald-100/50';
 
 export default function Skills() {
   const ref = useScrollReveal<HTMLDivElement>();
+  const { active, setActive, from } = useActiveSkill();
+  const chips = (items: string[], tone: string) => (
+    <>
+      <div className="flex flex-wrap gap-2">
+        {items.map((s) => (
+          <SkillChip key={s} skill={s} tone={tone} active={active} setActive={setActive} />
+        ))}
+      </div>
+      {active && items.includes(active) && <SeenIn skill={active} chipFrom={from} onClose={() => setActive(null)} />}
+    </>
+  );
 
   return (
     <section
@@ -34,6 +51,7 @@ export default function Skills() {
           <HoneyPot className="inline-block align-middle ml-3 w-12 sm:w-16 -mt-3" />
         </h2>
         <Scribble className="lg:right-0 lg:bottom-2">the toolkit, buzzing</Scribble>
+        <p className="mt-3 text-[13px] text-gray-500">Hover or tap a skill to send the bees to where I used it.</p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-6">
@@ -55,16 +73,7 @@ export default function Skills() {
                   <Icon className="h-4 w-4 text-pink-500" />
                   <span className="font-serif text-2xl">{title}</span>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {items.map((s) => (
-                    <span
-                      key={s}
-                      className="text-[13px] px-3.5 py-1.5 rounded-full text-gray-700 bg-pink-50 border border-pink-200/50 hover:border-pink-400 hover:bg-pink-100/50 transition-colors duration-300"
-                    >
-                      {s}
-                    </span>
-                  ))}
-                </div>
+                {chips(items, PINK)}
               </div>
             ))}
           </div>
@@ -78,16 +87,7 @@ export default function Skills() {
           <h3 className="text-[11px] tracking-[0.15em] uppercase text-cyan-500 font-medium mb-5">
             Tools
           </h3>
-          <div className="flex flex-wrap gap-2">
-            {skills.tools.map((s) => (
-              <span
-                key={s}
-                className="text-[13px] px-3.5 py-1.5 rounded-full text-gray-700 bg-cyan-50 border border-cyan-200/50 hover:border-cyan-400 hover:bg-cyan-100/50 transition-colors duration-300"
-              >
-                {s}
-              </span>
-            ))}
-          </div>
+          {chips(skills.tools, CYAN)}
         </div>
 
         {/* AI — yellow */}
@@ -101,16 +101,7 @@ export default function Skills() {
               AI Tools
             </h3>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {skills.ai.map((s) => (
-              <span
-                key={s}
-                className="text-[13px] px-3.5 py-1.5 rounded-full text-gray-700 bg-yellow-50 border border-yellow-200/50 hover:border-yellow-400 hover:bg-yellow-100/50 transition-colors duration-300"
-              >
-                {s}
-              </span>
-            ))}
-          </div>
+          {chips(skills.ai, YELLOW)}
         </div>
 
         {/* Certifications — violet */}
@@ -146,16 +137,7 @@ export default function Skills() {
             <HeartHandshake className="h-3.5 w-3.5" />
             <h3 className="text-[11px] tracking-[0.15em] uppercase font-medium">Soft Skills</h3>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {skills.soft.map((s) => (
-              <span
-                key={s}
-                className="text-[13px] px-3.5 py-1.5 rounded-full text-gray-700 bg-emerald-50 border border-emerald-200/50 hover:border-emerald-400 hover:bg-emerald-100/50 transition-colors duration-300"
-              >
-                {s}
-              </span>
-            ))}
-          </div>
+          {chips(skills.soft, EMERALD)}
         </div>
       </div>
     </section>

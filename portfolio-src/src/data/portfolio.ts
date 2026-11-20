@@ -14,6 +14,9 @@ export const profile = {
   email: 'Manasa.Rammohan@outlook.com',
   linkedin: 'https://www.linkedin.com/in/manasa-rammohan/',
   bio: "Professionally, I like creating content that helps communicate with ease. My work blends strategy, design, and storytelling to deliver content that looks strong and performs well across digital platforms.\nPersonally, I like being funny.",
+  // TODO(Manasa): the roles the split-flap board flips through under your name.
+  // These are the brief's suggestions; replace them with your own.
+  flapRoles: ['Analyst', 'Builder', 'Storyteller'],
   roles: [
     'Economics, Banking & Finance Graduate',
     'Private Equity Analyst',
@@ -117,6 +120,8 @@ export type ResearchPaper = {
   summary: string;
   methods: string[];
   scope: string;
+  /** One-line key finding, shown under the "Key finding" stamp. Empty = not shown. */
+  keyFinding: string;
 };
 
 export const research: ResearchPaper[] = [
@@ -129,6 +134,8 @@ export const research: ResearchPaper[] = [
       'A comparative 8-country study examining how digital transaction infrastructure expands (or limits) financial inclusion across emerging and developed markets.',
     methods: ['4 theoretical frameworks', '41 analytical codes', 'Cross-country comparison'],
     scope: '8 countries · Mixed methods',
+    // TODO(Manasa): the paper's key finding in one sentence.
+    keyFinding: '',
   },
   {
     id: 'swiss-banks',
@@ -139,6 +146,8 @@ export const research: ResearchPaper[] = [
       'Assessed the impact of AI and mobile banking on customer satisfaction across Swiss financial institutions using correlation and rank-order statistical tests.',
     methods: ['Pearson correlation', 'Spearman rank', 'Kendall Tau'],
     scope: 'Swiss banks & FinTechs',
+    // TODO(Manasa): the paper's key finding in one sentence.
+    keyFinding: '',
   },
   {
     id: 'uk-challenger',
@@ -149,6 +158,8 @@ export const research: ResearchPaper[] = [
       'Examined how Open Banking and API infrastructure are disrupting legacy banking models in the United Kingdom, with a focus on challenger bank competitiveness.',
     methods: ['Open Banking analysis', 'API infrastructure mapping', 'Case studies'],
     scope: 'UK banking sector',
+    // TODO(Manasa): the paper's key finding in one sentence.
+    keyFinding: '',
   },
   {
     id: 'bitcoin-fiat',
@@ -159,6 +170,8 @@ export const research: ResearchPaper[] = [
       "Synthesized 40+ research papers on Bitcoin viability as fiat alternative and proposed a regulatory framework anchored on India's e-RUPI digital currency infrastructure.",
     methods: ['Literature synthesis (40+ papers)', 'Regulatory framework design', 'e-RUPI integration'],
     scope: 'Regulatory proposal · India focus',
+    // TODO(Manasa): the paper's key finding in one sentence.
+    keyFinding: '',
   },
 ];
 
@@ -310,6 +323,15 @@ export type ProductConcept = {
   link?: string;
   linkLabel?: string;
   note?: string;
+  /** A before/after number from the summary, drawn as a small chart in the details. */
+  metric?: {
+    title: string;
+    from: { value: number; label: string; at: string };
+    to: { value: number; label: string; at: string };
+    max: number;
+    better: 'up' | 'down';
+    summary: string;
+  };
   /** What the card shows: a browser window, a phone, or a scrolling PDF. */
   screen: { kind: 'browser' | 'phone' | 'pdf'; src: string; label: string };
 };
@@ -327,6 +349,14 @@ export const productConcepts: ProductConcept[] = [
       "Product spec: decisions, trade-offs, metrics and next tests"
     ],
     "image": "/images/kayysee.svg",
+    "metric": {
+      "title": "Re-KYC time",
+      "from": { "value": 9, "label": "9 min", "at": "Before" },
+      "to": { "value": 2, "label": "~2 min", "at": "With KayYSee" },
+      "max": 10,
+      "better": "down",
+      "summary": "Re-KYC takes about two minutes instead of nine."
+    },
     "accent": "from-yellow-400 to-orange-400",
     "link": "/kayysee/"
   },

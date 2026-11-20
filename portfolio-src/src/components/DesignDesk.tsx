@@ -30,6 +30,7 @@ function Item({
     <button
       type="button"
       onClick={() => onOpen(id)}
+      data-evidence={`creative-${id}`}
       aria-label={`Open ${label}`}
       className="desk-item group text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 rounded-lg"
       style={style}
