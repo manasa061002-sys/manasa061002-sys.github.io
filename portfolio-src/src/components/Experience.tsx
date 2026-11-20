@@ -6,6 +6,7 @@ import { useReducedMotionSafe } from '@/lib/useReducedMotionSafe';
 import { Monkey } from '@/components/Critters';
 import Scribble from '@/components/Scribble';
 import MetricChart from '@/components/MetricChart';
+import { CritiqueBack, DevilButton, FlipCard } from '@/components/Critique';
 
 function renderBold(text: string) {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -135,6 +136,14 @@ export default function Experience() {
   const timeline = useRef<HTMLDivElement>(null);
   const cards = useRef<(HTMLDivElement | null)[]>([]);
   const reduced = useReducedMotionSafe();
+  const [flipped, setFlipped] = useState<Set<number>>(new Set());
+  const flip = (i: number) =>
+    setFlipped((s) => {
+      const n = new Set(s);
+      if (n.has(i)) n.delete(i);
+      else n.add(i);
+      return n;
+    });
 
   return (
     <section
@@ -168,7 +177,16 @@ export default function Experience() {
                 }}
                 className="station-card relative pl-14"
               >
-                <div className="sketch-box group hover:bg-white/[0.02] transition-colors duration-500 rounded-[20px] p-5 sm:p-7 sm:-ml-2">
+                <FlipCard
+                  flipped={flipped.has(i)}
+                  className="sm:-ml-2"
+                  back={
+                    <div className="sketch-box h-full rounded-[20px] border border-white/10 bg-white/[0.03] p-5 sm:p-7">
+                      <CritiqueBack critique={job.critique} title={job.role} onBack={() => flip(i)} />
+                    </div>
+                  }
+                  front={
+                <div className="sketch-box h-full group hover:bg-white/[0.02] transition-colors duration-500 rounded-[20px] p-5 sm:p-7">
                   <div className="flex flex-wrap items-baseline justify-between gap-2">
                     <div>
                       <h3 className="text-xl font-medium text-white">{job.role}</h3>
@@ -176,8 +194,9 @@ export default function Experience() {
                         {job.company} · {job.location}
                       </p>
                     </div>
-                    <span className="text-[11px] text-white/40 px-3 py-1 rounded-full border border-white/10">
-                      {job.period}
+                    <span className="flex items-center gap-2">
+                      <span className="text-[11px] text-white/40 px-3 py-1 rounded-full border border-white/10">{job.period}</span>
+                      <DevilButton flipped={false} onClick={() => flip(i)} label={job.role} className="border-white/15 text-white/50" />
                     </span>
                   </div>
 
@@ -208,6 +227,8 @@ export default function Experience() {
                     />
                   )}
                 </div>
+                  }
+                />
               </div>
             );
           })}

@@ -4,6 +4,7 @@ import { m, AnimatePresence, useAnimationControls, useReducedMotion } from 'moti
 import { X } from 'lucide-react';
 import { useSite } from '@/lib/site';
 import { paletteShortcut } from '@/lib/platform';
+import { useDayPart, visitorHello } from '@/lib/visitor';
 
 /**
  * A sketchbook-style guide that follows you down the page.
@@ -141,6 +142,11 @@ const POP_WINDOW_MS = 5000;
 
 export default function DoodleGuide() {
   const { active, light, mode } = useSite();
+  // The visitor's own clock and language: pyjamas at night, coffee in the morning,
+  // and "hello" in their language if it is one of mine.
+  const part = useDayPart();
+  const [hello] = useState(visitorHello);
+  const night = part === 'night';
   const reduced = !!useReducedMotion();
   const [bubble, setBubble] = useState(true);
   const [quip, setQuip] = useState<string | null>(null);
@@ -197,7 +203,13 @@ export default function DoodleGuide() {
   }, [reduced, hop]);
 
   const scene = SCRIPT[active] || SCRIPT.intro;
-  const message = quip ?? scene.text;
+  const welcome =
+    part === 'night'
+      ? `${hello}! Up late too? *yawn* Welcome to my Pandora!`
+      : part === 'morning'
+        ? `${hello}, good morning! Welcome to my Pandora. Coffee?`
+        : `${hello}, welcome to my Pandora!`;
+  const message = quip ?? (active === 'intro' || !SCRIPT[active] ? welcome : scene.text);
   const ink = light ? '#111111' : '#ffffff';
   const paper = light ? '#ffffff' : '#000000';
 
@@ -456,6 +468,15 @@ export default function DoodleGuide() {
                 style={{ transformOrigin: '47px 80px', transform: `rotate(${arms.l}deg)` }}
               >
                 <path d="M47 80 L35 104" fill="none" />
+                {/* morning coffee (unless that hand holds the paintbrush) */}
+                {part === 'morning' && prop !== 'brush' && !asleep && (
+                  <g strokeWidth="2">
+                    <path d="M28 103 L39 103 L38 114 C 37 116, 30 116, 29 114 Z" fill="#fafaf9" />
+                    <path d="M29 105.5 H38" fill="none" stroke="#7c4a1e" strokeWidth="2.4" />
+                    <path d="M38.5 106 C 43 106, 43 112, 38 112" fill="none" />
+                    <path className={anim('doodle-steam')} d="M31 99 C 29 96, 33 94, 31 91 M35.5 99 C 33.5 96, 37.5 94, 35.5 91" fill="none" strokeWidth="1.4" />
+                  </g>
+                )}
                 {prop === 'brush' && (
                   <g strokeWidth="2.2">
                     <path d="M35 104 L30 114" fill="none" />
@@ -487,7 +508,15 @@ export default function DoodleGuide() {
               {/* body */}
               <path d="M46 76 C 55 74, 65 74, 74 76 L 78 113 C 66 115, 54 115, 42 113 Z" />
               {/* outfit: a blazer for the Analyst, paint-splattered overalls for the Artist */}
-              {mode === 'analyst' ? (
+              {night ? (
+                // pyjamas (late at night, whatever the mode)
+                <g strokeWidth="2">
+                  <path d="M46 76 C 55 74, 65 74, 74 76 L 78 113 C 66 115, 54 115, 42 113 Z" fill="#e0e7ff" />
+                  <path d="M46 84 H74 M45 92 H75 M44 100 H76 M43 108 H77" fill="none" stroke="#6366f1" strokeWidth="1.6" />
+                  <circle cx="60" cy="88" r="1.3" fill="#312e81" stroke="none" />
+                  <circle cx="60" cy="96" r="1.3" fill="#312e81" stroke="none" />
+                </g>
+              ) : mode === 'analyst' ? (
                 <g strokeWidth="2">
                   <path d="M46 76 C 55 74, 65 74, 74 76 L 78 113 C 66 115, 54 115, 42 113 Z" fill="#27272a" />
                   <path d="M54 76 L60 89 L66 76 Z" fill="#ffffff" />
@@ -516,6 +545,13 @@ export default function DoodleGuide() {
               <path d="M60 16 C 76 15, 87 28, 86 43 C 85 59, 73 69, 59 68 C 44 68, 33 57, 34 42 C 35 27, 45 17, 60 16 Z" />
               {/* fringe */}
               <path d="M36 36 C 40 20, 56 12, 70 15 C 79 17, 86 26, 86 37 M50 18 C 52 26, 47 31, 42 33 M62 16 C 63 24, 60 29, 56 31" fill="none" />
+              {/* nightcap */}
+              {night && (
+                <g strokeWidth="2">
+                  <path d="M37 31 C 44 14, 68 8, 84 24 C 90 18, 96 12, 103 12 C 94 6, 76 4, 62 9 C 50 13, 41 21, 37 31 Z" fill="#a5b4fc" />
+                  <circle cx="104" cy="12" r="4.5" fill="#ffffff" />
+                </g>
+              )}
 
               {/* eyes: open (following the pointer) or shut when napping */}
               {asleep ? (
@@ -538,6 +574,9 @@ export default function DoodleGuide() {
               {/* mouth */}
               {asleep ? (
                 <circle cx="60" cy="56" r="1.8" fill="none" strokeWidth="1.8" />
+              ) : night ? (
+                // a sleepy mouth that keeps yawning
+                <ellipse className={anim('doodle-yawn')} cx="60" cy="56" rx="3.6" ry="4.2" fill={ink} style={{ transformBox: 'fill-box', transformOrigin: 'center' }} />
               ) : (
                 <path
                   d={pose === 'cheer' || trick === 'dance' ? 'M52 54 Q60 63 68 54 Z' : 'M53 55 Q60 60 67 55'}

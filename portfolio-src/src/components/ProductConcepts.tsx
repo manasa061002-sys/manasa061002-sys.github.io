@@ -9,6 +9,7 @@ import Picture, { bgSet } from '@/components/Picture';
 import Scribble from '@/components/Scribble';
 import Roamer from '@/components/Roamer';
 import MetricChart from '@/components/MetricChart';
+import { CritiqueBack, DevilButton, FlipCard } from '@/components/Critique';
 
 /**
  * The screenshot inside a device. On hover (or keyboard focus) it scrolls from
@@ -234,7 +235,10 @@ function LiveStage({ p }: { p: ProductConcept }) {
 export default function ProductConcepts() {
   const [current, setCurrent] = useState<ProductConcept>(productConcepts[0]);
   const [info, setInfo] = useState<ProductConcept | null>(null);
+  const [critique, setCritique] = useState(false);
   const ref = useScrollReveal<HTMLDivElement>();
+  // Picking another project turns the card back to the live view.
+  useEffect(() => setCritique(false), [current.id]);
 
   return (
     <section
@@ -267,7 +271,15 @@ export default function ProductConcepts() {
 
       {/* The selected project, live: click around, scroll, read. */}
       <div className="reveal" data-lenis-prevent>
-        <LiveStage key={current.id} p={current} />
+        <FlipCard
+          flipped={critique}
+          front={<LiveStage key={current.id} p={current} />}
+          back={
+            <div className="sketch-box h-full rounded-[24px] bg-white shadow-xl ring-1 ring-black/5 p-7 sm:p-10">
+              <CritiqueBack critique={current.critique} title={current.title.split(':')[0]} onBack={() => setCritique(false)} ink="gray-900" />
+            </div>
+          }
+        />
       </div>
       <div className="reveal mt-4 flex flex-wrap items-center justify-center gap-3 text-[13px]">
         <span className="text-gray-500">Live: {current.title.split(':')[0]}</span>
@@ -277,6 +289,12 @@ export default function ProductConcepts() {
         >
           About this project
         </button>
+        <DevilButton
+          flipped={critique}
+          onClick={() => setCritique((v) => !v)}
+          label={current.title.split(':')[0]}
+          className="border-gray-300 text-gray-600"
+        />
         {current.link && (
           <a
             href={current.link}

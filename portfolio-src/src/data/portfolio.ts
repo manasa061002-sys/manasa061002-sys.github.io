@@ -54,6 +54,9 @@ export const greetings = [
   { word: '안녕하세요', lang: 'Korean' },
 ];
 
+/** Your own honest critique of a piece of work, shown on the back of its card. */
+export type Critique = { counterpoint: string; differently: string };
+
 export type Experience = {
   role: string;
   company: string;
@@ -61,6 +64,7 @@ export type Experience = {
   period: string;
   points: string[];
   tags: string[];
+  critique: Critique;
 };
 
 export const experience: Experience[] = [
@@ -70,6 +74,8 @@ export const experience: Experience[] = [
     location: 'Zug, Switzerland',
     period: '09/2024 – 01/2025',
     tags: ['PE', 'CRM', 'Due Diligence', 'Investor Decks'],
+    // TODO(Manasa): your counterpoint and what you'd do differently.
+    critique: { counterpoint: '', differently: '' },
     points: [
       'Diagnosed a **3%** cold-outreach baseline across **200+** VC contacts, rebuilt CRM messaging and targeted **100+** HNW stakeholders, reaching **~15%** response rate within **2 weeks**.',
       'Rebuilt **5** investor presentations from scratch tailored to investor theses (including AVO Oro Verde avocado-orchard investment vehicle in Mexico) and wrote financial product one-pagers.',
@@ -83,6 +89,8 @@ export const experience: Experience[] = [
     location: 'Chennai, India',
     period: '06/2024 – 08/2024',
     tags: ['Finance Ops', 'Excel', 'Invoicing'],
+    // TODO(Manasa): your counterpoint and what you'd do differently.
+    critique: { counterpoint: '', differently: '' },
     points: [
       'Processed **1,000+** daily financial entries in Excel for a team managing **$1.4M** in monthly turnover.',
       'Handled **50+** invoices and credit/debit notes daily with full reconciliation.',
@@ -94,6 +102,8 @@ export const experience: Experience[] = [
     location: 'Chennai, India',
     period: '06/2022 – 07/2022',
     tags: ['Research', 'RBI Policy', 'KYC'],
+    // TODO(Manasa): your counterpoint and what you'd do differently.
+    critique: { counterpoint: '', differently: '' },
     points: [
       'Authored **3** internal research reports on RBI policy moves (repo rates, inflation).',
       'Guided **200+** customers through KYC verification workflows.',
@@ -105,6 +115,8 @@ export const experience: Experience[] = [
     location: 'Dubai, UAE',
     period: '06/2021 – 11/2021',
     tags: ['Market Research', 'Positioning', 'Databases'],
+    // TODO(Manasa): your counterpoint and what you'd do differently.
+    critique: { counterpoint: '', differently: '' },
     points: [
       'Identified a youth-first nostalgia positioning strategy in a **20-page** two-country feasibility study.',
       'Built a **500-firm** UAE database for outbound business development.',
@@ -332,6 +344,7 @@ export type ProductConcept = {
     better: 'up' | 'down';
     summary: string;
   };
+  critique: Critique;
   /** What the card shows: a browser window, a phone, or a scrolling PDF. */
   screen: { kind: 'browser' | 'phone' | 'pdf'; src: string; label: string };
 };
@@ -341,6 +354,8 @@ export const productConcepts: ProductConcept[] = [
     "id": "kayysee",
     "screen": { "kind": "browser", "src": "/images/screens/kayysee.jpg", "label": "manasa061002-sys.github.io/kayysee" },
     "title": "KayYSee: Re-KYC & Customer Lifecycle Concept",
+    // TODO(Manasa): your counterpoint and what you'd do differently.
+    "critique": { "counterpoint": "", "differently": "" },
     "period": "11/2026",
     "summary": "A product concept for a white-label investing app: a re-KYC flow that takes about two minutes instead of nine, plus the lifecycle dashboard a partner app would use to see where customers drop off and what to fix next.",
     "highlights": [
@@ -364,6 +379,8 @@ export const productConcepts: ProductConcept[] = [
     "id": "dash-dine-eco",
     "screen": { "kind": "browser", "src": "/images/screens/dash-and-dine.jpg", "label": "manasa061002-sys.github.io/dash-and-dine" },
     "title": "Dash & Dine Eco",
+    // TODO(Manasa): your counterpoint and what you'd do differently.
+    "critique": { "counterpoint": "", "differently": "" },
     "period": "03/2025 – 04/2025",
     "summary": "An all-in-one grocery aggregator concept featuring dynamic end-of-day pricing to reduce food waste and a green sustainability meter, peer-validated with positive user feedback.",
     "highlights": [
@@ -379,6 +396,8 @@ export const productConcepts: ProductConcept[] = [
     "id": "fintech-budget",
     "screen": { "kind": "phone", "src": "/images/screens/fresh-farm-market.jpg", "label": "Fresh Farm Market" },
     "title": "Fresh Farm Market",
+    // TODO(Manasa): your counterpoint and what you'd do differently.
+    "critique": { "counterpoint": "", "differently": "" },
     "period": "12/2024 – 01/2025",
     "summary": "A team concept app that connects Swiss shoppers with the farm stores around them: surplus deals, CO₂ scores, points to donate to local projects or take as cashback, and a Spotify Wrapped-style budget summary that an industry consultant singled out as a standout concept.",
     "highlights": [
@@ -394,6 +413,8 @@ export const productConcepts: ProductConcept[] = [
     "id": "blockchain-land-registry",
     "screen": { "kind": "pdf", "src": "/images/screens/blockchain-land-registry.jpg", "label": "blockchain-land-registry.pdf" },
     "title": "Blockchain Land Registry",
+    // TODO(Manasa): your counterpoint and what you'd do differently.
+    "critique": { "counterpoint": "", "differently": "" },
     "period": "09/2024 – 12/2024",
     "summary": "A data-sharing concept designed for property registries, banks, and brokers to modernize real estate records using DLT/blockchain, benchmarked against Sweden and Dubai.",
     "highlights": [
