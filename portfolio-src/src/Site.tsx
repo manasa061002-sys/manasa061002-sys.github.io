@@ -18,7 +18,7 @@ export default function Site({ onHome }: { onHome: () => void }) {
 
   return (
     <SiteProvider>
-      <div className="min-h-screen bg-black animate-[fadeIn_0.8s_ease]" style={{ paddingRight: 'var(--rail)' }}>
+      <div className="min-h-screen bg-black animate-[fadeIn_0.8s_ease]">
         <NavBar onHome={onHome} />
         {/* Welcome: the name in big letters with all the animals */}
         <Intro />

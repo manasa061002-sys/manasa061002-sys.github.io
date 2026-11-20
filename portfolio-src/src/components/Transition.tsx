@@ -15,8 +15,10 @@ const PIN_VH = 130;
  * As it scrolls into view the grid draws itself in and colour starts to bleed
  * through the columns, so there is never a blank screen. Then it pins (GSAP
  * ScrollTrigger) while you scroll: the columns widen into colour bands, the
- * background moves from black to white, the bands lift, and the headline
- * settles at the bottom, right above the next section.
+ * background moves from black to white and the bands lift off the headline.
+ * The section ends 40vh early (negative margin), so Product Concepts slides up
+ * under the headline while it is still pinned instead of after a blank half
+ * screen. That bottom part of the stage is empty white, so nothing is hidden.
  *
  * The section reserves its full scroll height in CSS (pinSpacing: false), and
  * the start state is plain CSS, so GSAP can load lazily without layout jumps.
@@ -72,15 +74,12 @@ export default function Transition() {
           .fromTo(q('[data-t-line1]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2 }, 0.2)
           .fromTo(q('[data-t-line2]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2 }, 0.28)
           .to(st, { backgroundColor: '#ffffff', duration: 0.5 }, 0.3)
-          .to(q('[data-fill]'), { scaleY: 0, duration: 0.3, stagger: { each: 0.015, from: 'edges' } }, 0.62)
+          .to(q('[data-fill]'), { scaleY: 0, duration: 0.22, stagger: { each: 0.01, from: 'edges' } }, 0.56)
           // Text goes dark as the page turns white, then turns rainbow once the
           // colour bands have lifted away.
           .to(q('[data-t-text]'), { '--fill': 'rgba(17,24,39,1)', color: '#111827', duration: 0.12 }, 0.5)
           .to(q('[data-t-text]'), { '--fill': 'rgba(17,24,39,0)', duration: 0.18 }, 0.7)
-          .to(q('[data-t-arrow]'), { opacity: 0, duration: 0.1 }, 0.85)
-          // The headline drifts down to the bottom of the screen, so when the
-          // pin lets go it sits right above Product Concepts (no empty white).
-          .to(q('[data-t-text]'), { y: '34vh', duration: 0.25 }, 0.75);
+          .to(q('[data-t-arrow]'), { opacity: 0, duration: 0.1 }, 0.85);
 
       });
 
@@ -121,7 +120,7 @@ export default function Transition() {
     <section
       ref={root}
       data-section="transition"
-      className="relative motion-reduce:!h-[70vh]"
+      className="relative motion-safe:mb-[-40vh] motion-reduce:!h-[70vh]"
       style={{ height: `${100 + PIN_VH}vh` }}
     >
       <div ref={stage} className="relative h-screen overflow-hidden motion-reduce:h-[70vh]" style={{ background: '#000' }}>

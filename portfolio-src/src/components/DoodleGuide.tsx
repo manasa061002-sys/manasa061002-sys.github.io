@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { m, AnimatePresence, useAnimationControls, useReducedMotion } from 'motion/react';
 import { X } from 'lucide-react';
@@ -6,28 +6,20 @@ import { useSite } from '@/lib/site';
 import { paletteShortcut } from '@/lib/platform';
 
 /**
- * A sketchbook-style guide that keeps you company down the page.
- *
- * Where she lives (so she never covers any content):
- * - 1024px and wider: in her own margin on the right (the page reserves it via
- *   the --rail width), standing at the bottom with her speech bubble above her.
- * - Narrower screens: small, in the nav bar next to the menu button. Her
- *   bubble only opens when you tap her.
- *
- * What she does:
- * - The first time each section comes into view she says one line (shown
- *   whole, with a short fade), keeps it up for about 4 seconds, then the
- *   bubble folds away. On small screens she just changes pose and prop.
- * - Click/tap her to hear the current section's line again. Keep clicking
- *   for quips; click six times in a few seconds and she pops into confetti.
- * - Eyes follow the pointer, legs run while you scroll, little tricks when
- *   you pause, a nap if you leave her alone for long.
+ * A sketchbook-style guide that follows you down the page.
+ * - Each section gets a pose, a prop and a line of commentary.
+ * - Eyes follow the pointer; legs run while you scroll.
+ * - When you pause it does little tricks; leave it long enough and it naps.
+ * - Now and then it moves to a new spot in the lower right of the screen
+ *   (never off-screen, and not at all on phones).
+ * - Click it for a quip and a trick. Click it too much and it pops into
+ *   rainbow confetti, then drops back in a moment later.
  * Everything that moves is switched off for prefers-reduced-motion.
  */
 
 type Pose = 'wave' | 'point' | 'think' | 'cheer' | 'rest' | 'carry' | 'magnify' | 'paint' | 'camera' | 'juggle' | 'idea';
 type Prop = 'none' | 'briefcase' | 'magnifier' | 'brush' | 'camera' | 'balls' | 'bulb';
-type Trick = 'jump' | 'spin' | 'dance' | 'look' | 'cartwheel' | 'wave';
+type Trick = 'jump' | 'spin' | 'dance' | 'look' | 'cartwheel' | 'wave' | 'roam';
 
 const SCRIPT: Record<string, { text: string; pose: Pose; prop: Prop }> = {
   intro: { text: 'Hi, welcome to my Pandora!', pose: 'wave', prop: 'none' },
@@ -42,8 +34,15 @@ const SCRIPT: Record<string, { text: string; pose: Pose; prop: Prop }> = {
   footer: { text: 'Thanks for stopping by! Say hi anytime.', pose: 'wave', prop: 'none' },
 };
 
-const QUIPS = ['That tickles.', 'Psst… press {KEY} to jump anywhere.', 'Wheee!', 'Okay, okay…', 'Catch me if you can!'];
+// The shortcut tip names the right keys for this device, and is left out on touch screens.
+const SHORTCUT = paletteShortcut();
+const QUIPS = ['That tickles.', ...(SHORTCUT ? [`Psst… press ${SHORTCUT} to jump anywhere.`] : []), 'Wheee!', 'Okay, okay…', 'Catch me if you can!'];
 const TRICKS: Trick[] = ['jump', 'spin', 'dance', 'look', 'cartwheel', 'wave'];
+const TRICK_LINES: Partial<Record<Trick, string>> = {
+  dance: '♪ Doo be doo… ♪',
+  cartwheel: 'Ta-da!',
+  spin: 'Wheee!',
+};
 
 // Arm angles in degrees (0 = hanging down). Negative lifts the right arm, positive the left.
 const ARMS: Record<Pose, { l: number; r: number }> = {
@@ -62,22 +61,33 @@ const ARMS: Record<Pose, { l: number; r: number }> = {
 
 const IDLE_TRICK_MS = 14000;
 const SLEEP_AFTER_MS = 30000;
-/** How long a line stays up before the bubble folds away. */
-const SAY_MS = 4000;
-/** Below this width she sits in the nav bar instead of her own margin. */
-const DOCK_QUERY = '(max-width: 1023px)';
 
-function useDocked() {
-  const [docked, setDocked] = useState(() => typeof window !== 'undefined' && window.matchMedia(DOCK_QUERY).matches);
+function useTyped(text: string, on: boolean) {
+  const [n, setN] = useState(on ? 0 : text.length);
   useEffect(() => {
-    const mq = window.matchMedia(DOCK_QUERY);
-    const on = () => setDocked(mq.matches);
-    mq.addEventListener('change', on);
-    return () => mq.removeEventListener('change', on);
-  }, []);
-  return docked;
+    if (!on) {
+      setN(text.length);
+      return;
+    }
+    setN(0);
+    const t = window.setInterval(() => {
+      setN((x) => {
+        if (x >= text.length) {
+          window.clearInterval(t);
+          return x;
+        }
+        return x + 1;
+      });
+    }, 22);
+    return () => window.clearInterval(t);
+  }, [text, on]);
+  return text.slice(0, n);
 }
 
+/** Only this tiny component re-renders while the text types out. */
+function Typed({ text, on }: { text: string; on: boolean }) {
+  return <span aria-hidden>{useTyped(text, on)}</span>;
+}
 
 const CONFETTI_COLORS = ['#ec4899', '#f59e0b', '#facc15', '#22c55e', '#06b6d4', '#6366f1', '#a855f7'];
 
@@ -132,16 +142,12 @@ const POP_WINDOW_MS = 5000;
 export default function DoodleGuide() {
   const { active, light } = useSite();
   const reduced = !!useReducedMotion();
-  const docked = useDocked();
-  // What the bubble says right now (null = folded away).
-  const [said, setSaid] = useState<string | null>(null);
+  const [bubble, setBubble] = useState(true);
+  const [quip, setQuip] = useState<string | null>(null);
   const [entered, setEntered] = useState(reduced);
   const [trick, setTrick] = useState<Trick | null>(null);
   const [asleep, setAsleep] = useState(false);
-  const [popped, setPopped] = useState<{ x: number; y: number } | null>(null);
-  const spoken = useRef(new Set<string>());
   const clicks = useRef<number[]>([]);
-  const hideTimer = useRef(0);
   const hop = useAnimationControls();
   const turb = useRef<SVGFETurbulenceElement>(null);
   const legs = useRef<SVGGElement>(null);
@@ -149,42 +155,56 @@ export default function DoodleGuide() {
   const button = useRef<HTMLButtonElement>(null);
   const lastActivity = useRef(Date.now());
   const asleepRef = useRef(false);
-  const dockedRef = useRef(docked);
-  dockedRef.current = docked;
+  // Where she stands along the bottom (px left of her home corner) and which way she faces.
+  const [spot, setSpot] = useState({ x: 0, face: 1 });
+  const [vw, setVw] = useState(1280);
+  const roamTimer = useRef(0);
+  const [popped, setPopped] = useState<{ x: number; y: number } | null>(null);
+
+  useEffect(() => {
+    const onResize = () => {
+      setVw(window.innerWidth);
+      setSpot((s) => ({ ...s, x: Math.max(s.x, -roamRange()) }));
+    };
+    onResize();
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
+  }, []);
+
+  /** How far left she may go: the right part of the screen only, keeping the bubble visible. */
+  const roamRange = () => {
+    // She stays put on the right-hand side.
+    return 0;
+  };
+
+  /** Move to a new spot along the bottom right of the screen. */
+  const roam = useCallback(() => {
+    if (reduced) return;
+    const max = roamRange();
+    if (max < 60) return;
+    setSpot((s) => {
+      // Go somewhere noticeably different, within the allowed range.
+      const x = s.x > -max / 2 ? -Math.round(max * (0.55 + Math.random() * 0.45)) : -Math.round(Math.random() * max * 0.35);
+      return { x, face: x < s.x ? -1 : 1 };
+    });
+    legs.current?.classList.add('doodle-walk');
+    hop.start({ y: [0, -36, 0, -12, 0], transition: { duration: 1.2, times: [0, 0.35, 0.65, 0.82, 1] } });
+    window.clearTimeout(roamTimer.current);
+    roamTimer.current = window.setTimeout(() => {
+      legs.current?.classList.remove('doodle-walk');
+      setSpot((s) => ({ ...s, face: 1 }));
+    }, 1350);
+  }, [reduced, hop]);
 
   const scene = SCRIPT[active] || SCRIPT.intro;
+  const message = quip ?? scene.text;
   const ink = light ? '#111111' : '#ffffff';
   const paper = light ? '#ffffff' : '#000000';
 
-  /** Say a line, then fold the bubble away after a few seconds. */
-  const say = (text: string, ms = SAY_MS) => {
-    setSaid(text);
-    window.clearTimeout(hideTimer.current);
-    hideTimer.current = window.setTimeout(() => setSaid(null), ms);
-  };
-  const hush = () => {
-    window.clearTimeout(hideTimer.current);
-    setSaid(null);
-  };
-  useEffect(() => () => window.clearTimeout(hideTimer.current), []);
-
-  /** Hops are much smaller in the nav bar, so she never leaves the screen. */
-  const jump = (y: number[], duration: number) => {
-    if (reduced) return;
-    const k = dockedRef.current ? 0.2 : 1;
-    hop.start({ y: y.map((v) => v * k), transition: { duration } });
-  };
-
-  const quip = (n: number) => {
-    const key = paletteShortcut();
-    const lines = QUIPS.filter((q) => key || !q.includes('{KEY}')).map((q) => q.replace('{KEY}', key ?? ''));
-    return lines[(n - 1) % lines.length];
-  };
-
-  let pose: Pose = scene.pose;
+  let pose: Pose = quip ? 'cheer' : scene.pose;
   if (trick === 'wave') pose = 'wave';
   if (asleep) pose = 'rest';
-  const prop: Prop = asleep ? 'none' : scene.prop;
+  const prop: Prop = asleep || quip ? 'none' : scene.prop;
   const arms = ARMS[pose];
 
   // Hand-drawn "line boil": nudge the noise seed a few times a second.
@@ -198,23 +218,24 @@ export default function DoodleGuide() {
     return () => window.clearInterval(t);
   }, [reduced]);
 
-  // A new section: speak its line once (only in the margin, never over content).
+  // Let the bubble get out of the way after a while.
   useEffect(() => {
-    if (!entered) return;
-    if (!spoken.current.has(active)) {
-      spoken.current.add(active);
-      if (!docked) say(scene.text);
-    } else {
-      hush();
-    }
-    jump([0, -14, 0], 0.45);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [active, entered]);
+    if (!bubble) return;
+    const t = window.setTimeout(() => setBubble(false), 7000);
+    return () => window.clearTimeout(t);
+  }, [bubble, message]);
 
-  // Moving to a small screen: fold the bubble so it never sits over content.
+  // Hop + re-open the bubble whenever the section changes.
   useEffect(() => {
-    if (docked) hush();
-  }, [docked]);
+    setQuip(null);
+    setBubble(true);
+    // Only sometimes move on a section change; mostly just a little hop.
+    if (!reduced && entered) {
+      if (Math.random() < 0.35) roam();
+      else hop.start({ y: [0, -14, 0], transition: { duration: 0.45, ease: 'easeOut' } });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active, reduced, entered]);
 
   // Activity: run while scrolling, follow the pointer, wake up, reset the idle clock.
   useEffect(() => {
@@ -228,7 +249,9 @@ export default function DoodleGuide() {
       if (!asleepRef.current) return;
       asleepRef.current = false;
       setAsleep(false);
-      jump([0, -22, 0], 0.4);
+      setQuip("Huh? I'm up, I'm up!");
+      setBubble(true);
+      hop.start({ y: [0, -22, 0], transition: { duration: 0.4 } });
     };
     const onScroll = () => {
       wake();
@@ -262,10 +285,9 @@ export default function DoodleGuide() {
       window.clearTimeout(stopRun);
       cancelAnimationFrame(raf);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced]);
+  }, [reduced, hop]);
 
-  // Idle: a silent trick now and then, a nap after a long pause.
+  // Idle: a trick every few seconds, a nap after a long pause.
   useEffect(() => {
     if (reduced || !entered) return;
     const t = window.setInterval(() => {
@@ -273,32 +295,38 @@ export default function DoodleGuide() {
       if (idle > SLEEP_AFTER_MS) {
         asleepRef.current = true;
         setAsleep(true);
+        setBubble(false);
         return;
       }
       if (asleepRef.current || idle < 4000 || Math.random() < 0.5) return;
       const next = TRICKS[Math.floor(Math.random() * TRICKS.length)];
       setTrick(next);
-      if (next === 'jump') jump([0, -26, 0, -10, 0], 0.8);
+      if (TRICK_LINES[next]) {
+        setQuip(TRICK_LINES[next]!);
+        setBubble(true);
+        window.setTimeout(() => setQuip(null), 2500);
+      }
+      if (next === 'roam') roam();
+      if (next === 'jump') hop.start({ y: [0, -26, 0, -10, 0], transition: { duration: 0.8 } });
       if (next === 'spin') hop.start({ rotateY: [0, 360], transition: { duration: 0.8, ease: 'easeInOut' } });
-      if (next === 'cartwheel') hop.start({ rotate: [0, 360], transition: { duration: 0.9, ease: 'easeInOut' } });
+      if (next === 'cartwheel') hop.start({ rotate: [0, 360], x: [0, -20, 0], transition: { duration: 0.9, ease: 'easeInOut' } });
       window.setTimeout(() => setTrick(null), 2400);
     }, IDLE_TRICK_MS / 2);
     return () => window.clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reduced, entered, hop]);
+  }, [reduced, entered, hop, roam]);
 
   const pop = () => {
     const b = button.current?.getBoundingClientRect();
     if (!b) return;
     clicks.current = [];
-    hush();
+    setBubble(false);
     setPopped({ x: b.left + b.width / 2, y: b.top + b.height / 2 });
     // Back after a moment: drop in from above.
     window.setTimeout(() => {
       setPopped(null);
-      say('Ta-da! Good as new.');
-      const k = dockedRef.current ? 0.1 : 1;
-      hop.start({ y: [-500 * k, 0, -40 * k, 0, -12 * k, 0], scale: 1, transition: { duration: 1.1, times: [0, 0.45, 0.62, 0.78, 0.9, 1] } });
+      setQuip('Ta-da! Good as new.');
+      setBubble(true);
+      hop.start({ y: [-500, 0, -40, 0, -12, 0], scale: 1, transition: { duration: 1.1, times: [0, 0.45, 0.62, 0.78, 0.9, 1] } });
     }, 3200);
   };
 
@@ -310,25 +338,20 @@ export default function DoodleGuide() {
     const now = Date.now();
     clicks.current = [...clicks.current.filter((t) => now - t < POP_WINDOW_MS), now];
     const n = clicks.current.length;
-    // Bubble closed: tapping her re-opens the line for this section.
-    if (said === null && n === 1) {
-      say(scene.text, docked ? 5000 : SAY_MS);
-      jump([0, -14, 0], 0.45);
-      return;
-    }
+    setBubble(true);
     if (!reduced && n >= POP_AT) {
-      say('POP!', 800);
+      setQuip('POP!');
       pop();
       return;
     }
-    if (n === POP_AT - 2) say("Careful, I'm getting dizzy…");
-    else if (n === POP_AT - 1) say("Stop it, I'm gonna pop!");
-    else say(quip(n));
+    if (n === POP_AT - 2) setQuip("Careful, I'm getting dizzy…");
+    else if (n === POP_AT - 1) setQuip("Stop it, I'm gonna pop!");
+    else setQuip(QUIPS[(n - 1) % QUIPS.length]);
     if (reduced) return;
     const moves = [
       () => hop.start({ rotate: [0, 360], transition: { duration: 0.8, ease: 'easeInOut' } }),
       () => hop.start({ rotateY: [0, 360], transition: { duration: 0.7 } }),
-      () => jump([0, -40, 0, -16, 0], 0.8),
+      () => hop.start({ y: [0, -40, 0, -16, 0], transition: { duration: 0.8 } }),
     ];
     // Puffs up as you keep clicking.
     if (n >= POP_AT - 2) hop.start({ scale: [1, 1.25 + (n - POP_AT + 2) * 0.1, 1.1], transition: { duration: 0.35 } });
@@ -336,82 +359,70 @@ export default function DoodleGuide() {
   };
 
   const anim = (cls: string) => (reduced ? '' : cls);
+  // On the left half of the screen the speech bubble goes on her right.
+  const onLeft = spot.x < -vw * 0.45;
   const rightArmAnim = trick === 'dance' ? 'doodle-dance-r' : pose === 'wave' ? 'doodle-wave' : '';
   const leftArmAnim = trick === 'dance' ? 'doodle-dance-l' : '';
 
-  const bubble = (
-    <AnimatePresence>
-      {said !== null && entered && (
-        <m.div
-          key="bubble"
-          initial={reduced ? { opacity: 0 } : { opacity: 0, y: docked ? -6 : 6 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: reduced ? 0.15 : 0.25, ease: 'easeOut' }}
-          style={{ color: ink, background: paper, borderColor: ink }}
-          className={`doodle-bubble pointer-events-auto border-2 px-3 py-2 pr-6 font-serif italic leading-snug transition-colors duration-500 ${
-            docked
-              ? 'fixed top-[68px] right-3 z-50 max-w-[min(260px,calc(100vw-24px))] text-[15px] shadow-lg'
-              : 'absolute left-2 right-2 bottom-[calc(100%+10px)] text-[14px] xl:text-[15px]'
-          }`}
-        >
-          {said}
-          <button onClick={hush} aria-label="Hide message" className="absolute top-1 right-1 opacity-50 hover:opacity-100 focus-visible:opacity-100">
-            <X className="h-3 w-3" />
-          </button>
-          {/* tail, pointing at her */}
-          <svg
-            className={`absolute ${docked ? '-top-[13px] right-[30px] rotate-180' : '-bottom-[13px] left-1/2 -translate-x-1/2'}`}
-            width="14"
-            height="14"
-            viewBox="0 0 14 14"
-            aria-hidden
-          >
-            <path d="M1 0 L7 13 L13 0" fill={paper} stroke={ink} strokeWidth="2" strokeLinejoin="round" />
-          </svg>
-        </m.div>
-      )}
-    </AnimatePresence>
-  );
-
   return (
-    <>
-      {/* Her margin (wide screens): the page reserves this strip, so nothing sits under it. */}
-      {!docked && (
-        <div
-          aria-hidden
-          className="fixed top-0 right-0 bottom-0 z-30 border-l transition-colors duration-500 pointer-events-none"
-          style={{ width: 'var(--rail)', background: paper, borderColor: light ? 'rgba(0,0,0,0.08)' : 'rgba(255,255,255,0.1)' }}
-        />
-      )}
-      {/* Screen readers get each line once, without the visual timing. */}
-      <p className="sr-only" aria-live="polite">{said ?? ''}</p>
-      <m.div
-        className={
-          docked
-            ? 'fixed top-[6px] right-[52px] sm:right-[70px] z-50 w-[38px] pointer-events-none select-none'
-            : 'fixed bottom-4 right-0 z-30 flex justify-center pointer-events-none select-none'
-        }
-        style={docked ? undefined : { width: 'var(--rail)' }}
-        initial={reduced ? false : { opacity: 0, y: docked ? 0 : 60 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.8, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-        onAnimationComplete={() => setEntered(true)}
-      >
-        {!docked && bubble}
-        <div className={docked ? 'relative' : 'relative w-[96px] xl:w-[108px]'}>
-          {popped && <Confetti x={popped.x} y={popped.y} />}
-          <m.button
-            ref={button}
-            animate={hop}
-            onClick={onPoke}
-            style={{ transformPerspective: 400, visibility: popped ? 'hidden' : 'visible' }}
-            aria-label={`Doodle guide. ${said === null ? 'Tap to hear what she says about this section.' : 'Tap for a quip.'}`}
-            className="doodle-btn pointer-events-auto w-full focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 rounded-xl"
+    <m.div
+      className={`fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-30 flex items-end gap-1 pointer-events-none select-none ${
+        onLeft ? 'flex-row-reverse' : ''
+      }`}
+      initial={reduced ? false : { x: 160 }}
+      animate={{ x: spot.x }}
+      transition={entered ? { duration: 1.3, ease: [0.45, 0, 0.55, 1] } : { delay: 1.2, duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
+      onAnimationComplete={() => setEntered(true)}
+    >
+      <AnimatePresence>
+        {bubble && entered && (
+          <m.div
+            key="bubble"
+            initial={{ opacity: 0, scale: 0.8, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+            style={{ color: ink, background: paper, borderColor: ink, originX: onLeft ? 0 : 1, originY: 1 }}
+            className="doodle-bubble pointer-events-auto relative mb-20 sm:mb-28 max-w-[170px] sm:max-w-[220px] border-2 px-3.5 py-2.5 pr-6 font-serif italic text-[14px] sm:text-[16px] leading-snug transition-colors duration-500"
+            role="status"
+            aria-live="polite"
           >
+            <Typed text={message} on={!reduced && entered} />
+            <span className="sr-only">{message}</span>
+            <button
+              onClick={() => setBubble(false)}
+              aria-label="Hide message"
+              className="absolute top-1 right-1 opacity-50 hover:opacity-100"
+            >
+              <X className="h-3 w-3" />
+            </button>
+            {/* tail */}
+            <svg
+              className={`absolute bottom-3 ${onLeft ? '-left-[13px]' : '-right-[13px]'}`}
+              width="16"
+              height="14"
+              viewBox="0 0 16 14"
+              aria-hidden
+            >
+              <path d={onLeft ? 'M16 2 L1 7 L16 12' : 'M0 2 L15 7 L0 12'} fill={paper} stroke={ink} strokeWidth="2" strokeLinejoin="round" />
+            </svg>
+          </m.div>
+        )}
+      </AnimatePresence>
+
+      {popped && <Confetti x={popped.x} y={popped.y} />}
+      <m.button
+        ref={button}
+        animate={hop}
+        onClick={onPoke}
+        style={{ transformPerspective: 400, visibility: popped ? 'hidden' : 'visible' }}
+        aria-label="Doodle guide. Click for a tip."
+        className="doodle-btn pointer-events-auto w-[84px] sm:w-[118px] focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400 rounded-xl"
+      >
         <svg
           viewBox="0 0 120 160"
           className="w-full h-auto overflow-visible"
+          style={{ transform: `scaleX(${spot.face})`, transition: 'transform 0.2s' }}
           aria-hidden
         >
           <defs>
@@ -559,10 +570,8 @@ export default function DoodleGuide() {
             </g>
           </g>
         </svg>
-          </m.button>
-        </div>
-      </m.div>
-      {docked && bubble}
-    </>
+      </m.button>
+    </m.div>
   );
 }
+

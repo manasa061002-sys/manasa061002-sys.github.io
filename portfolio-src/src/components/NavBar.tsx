@@ -37,7 +37,7 @@ export default function NavBar({ onHome }: { onHome: () => void }) {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-[var(--rail)] z-40 backdrop-blur-xl transition-colors duration-500 ${bar}`}
+      className={`fixed top-0 left-0 right-0 z-40 backdrop-blur-xl transition-colors duration-500 ${bar}`}
     >
       <nav className="max-w-5xl mx-auto px-6 sm:px-10 h-16 flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ export default function NavBar({ onHome }: { onHome: () => void }) {
         </div>
 
         {/* Desktop */}
-        <div className="hidden lg:flex items-center gap-0.5">
+        <div className="hidden md:flex items-center gap-0.5">
           {sections.map((l) => (
             <button
               key={l.id}
@@ -94,7 +94,7 @@ export default function NavBar({ onHome }: { onHome: () => void }) {
           onClick={() => setOpen(!open)}
           aria-label={open ? 'Close menu' : 'Open menu'}
           aria-expanded={open}
-          className={`lg:hidden ${light ? 'text-gray-700' : 'text-white/70'}`}
+          className={`md:hidden ${light ? 'text-gray-700' : 'text-white/70'}`}
         >
           {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
         </button>
@@ -113,7 +113,7 @@ export default function NavBar({ onHome }: { onHome: () => void }) {
       {/* Mobile menu */}
       {open && (
         <div
-          className={`lg:hidden border-b px-6 py-4 flex flex-col gap-0.5 animate-[fadeIn_0.2s_ease] ${
+          className={`md:hidden border-b px-6 py-4 flex flex-col gap-0.5 animate-[fadeIn_0.2s_ease] ${
             light ? 'bg-white/95 border-black/5' : 'bg-black/95 border-white/10'
           }`}
         >

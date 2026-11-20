@@ -431,8 +431,3 @@ section[id] {
   .bg-set { background-image: var(--bg-set); }
 }
 
-/* Width of the doodle guide's margin on the right (wide screens only).
-   The page is padded by this much so she never stands over content. */
-:root { --rail: 0px; }
-@media (min-width: 1024px) { :root { --rail: 148px; } }
-@media (min-width: 1280px) { :root { --rail: 168px; } }
