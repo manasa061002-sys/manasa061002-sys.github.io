@@ -234,17 +234,21 @@ export function Elephant({ className = '', tone = 'dark', spray = 'arc' }: { cla
   return (
     <svg viewBox="0 0 160 110" className={`overflow-visible ${tone === 'dark' ? 'ink-flip' : ''} ${className}`} aria-hidden>
       <g stroke={ink} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-        {/* water spray: drops travel along an arc up and to the right */}
-        {Array.from({ length: 12 }).map((_, i) => (
-          <circle
-            key={i}
-            className={spray === 'tall' ? 'spray-drop spray-tall' : 'spray-drop'}
-            r={1.6 + (i % 3) * 0.8}
-            fill={tone === 'dark' ? '#e0f2fe' : '#38bdf8'}
-            stroke="none"
-            style={{ animationDelay: `${i * 0.07}s` }}
-          />
-        ))}
+        {/* water spray: a fan of five streams of big drops, up and to the right,
+            each drop splashing out where it lands */}
+        {[0, 1, 2, 3, 4].map((s) =>
+          Array.from({ length: 18 }).map((_, i) => (
+            <circle
+              key={`${s}-${i}`}
+              className={`spray-drop spray-${spray}-${s}`}
+              r={6 + ((i * 7 + s * 3) % 5) * 1.7}
+              fill={i % 4 === 0 ? '#ffffff' : tone === 'dark' ? '#bae6fd' : '#38bdf8'}
+              fillOpacity={0.75 + (i % 3) * 0.1}
+              stroke="none"
+              style={{ animationDelay: `${i * 0.05 + s * 0.035}s` }}
+            />
+          )),
+        )}
         {/* tail */}
         <path className="cat-tail" d="M19 58 C 11 62, 9 70, 11 76" fill="none" style={{ transformBox: 'view-box', transformOrigin: '19px 58px' }} />
         {/* legs */}

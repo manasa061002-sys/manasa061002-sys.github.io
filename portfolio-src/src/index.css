@@ -255,17 +255,28 @@ section[id] {
 .elephant-trunk { animation: trunk 6s ease-in-out infinite; }
 @keyframes trunk { 0%, 15%, 70%, 100% { transform: rotate(20deg); } 25%, 60% { transform: rotate(-8deg); } }
 .spray-drop {
-  offset-path: path('M136 22 C 170 -40, 260 -60, 340 10');
   offset-rotate: 0deg;
   animation: spray 6s linear infinite;
   opacity: 0;
 }
-.spray-tall { offset-path: path('M136 22 C 170 -170, 420 -300, 660 -130'); }
+/* three streams fanning out from the trunk (footer arc, intro tall arc) */
+.spray-arc-0 { offset-path: path('M136 22 C 170 -40, 260 -60, 340 10'); }
+.spray-arc-1 { offset-path: path('M136 22 C 175 -70, 300 -95, 395 -5'); }
+.spray-arc-2 { offset-path: path('M136 22 C 160 -20, 225 -32, 290 20'); }
+.spray-arc-3 { offset-path: path('M136 22 C 172 -55, 280 -78, 368 4'); }
+.spray-arc-4 { offset-path: path('M136 22 C 166 -30, 245 -48, 318 16'); }
+.spray-tall-0 { offset-path: path('M136 22 C 170 -170, 420 -300, 660 -130'); }
+.spray-tall-1 { offset-path: path('M136 22 C 180 -220, 480 -350, 760 -90'); }
+.spray-tall-2 { offset-path: path('M136 22 C 155 -120, 340 -230, 540 -150'); }
+.spray-tall-3 { offset-path: path('M136 22 C 175 -195, 450 -325, 710 -110'); }
+.spray-tall-4 { offset-path: path('M136 22 C 162 -145, 380 -265, 600 -140'); }
 @keyframes spray {
-  0%, 26% { offset-distance: 0%; opacity: 0; }
-  27% { opacity: 1; }
-  52% { offset-distance: 100%; opacity: 0.9; }
-  53%, 100% { offset-distance: 100%; opacity: 0; }
+  0%, 25% { offset-distance: 0%; opacity: 0; transform: scale(0.5); }
+  27% { opacity: 1; transform: scale(0.8); }
+  46% { opacity: 0.95; transform: scale(1.1); }
+  /* landing: the drop bursts wider and fades, like a splash */
+  52% { offset-distance: 100%; opacity: 0; transform: scale(2); }
+  53%, 100% { offset-distance: 100%; opacity: 0; transform: scale(0.5); }
 }
 /* walking cat */
 /* Four-beat walk: each paw is planted and pushed back steadily (stance),
