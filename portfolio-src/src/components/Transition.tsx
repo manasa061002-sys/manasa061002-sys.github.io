@@ -9,6 +9,10 @@ const BANDS = [
 const ROWS = 6;
 // How far the section stays pinned, in viewport heights.
 const PIN_VH = 130;
+// Space between the arrow under the headline and the top of Product Concepts.
+const GAP_PX = 10;
+// The arrow under the button: mt-8 (32px) + h-5 (20px).
+const ARROW_PX = 52;
 
 /**
  * The bridge between the black professional half and the white "other side".
@@ -18,7 +22,7 @@ const PIN_VH = 130;
  * bands lift off the headline, which turns rainbow. It now invites you to try
  * the Analyst / Artist switch in the nav (with a button to flip it here too).
  * Colours come from the theme, so it works on black (Analyst) and paper (Artist).
- * The section ends 40vh early (negative margin), so Product Concepts slides up
+ * The section ends early (a measured negative margin), so Product Concepts slides up
  * under the headline while it is still pinned instead of after a blank half
  * screen. That bottom part of the stage is empty, so nothing is hidden.
  *
@@ -36,6 +40,7 @@ export default function Transition() {
     const st = stage.current;
     if (!el || !st) return;
     let revert = () => {};
+    let refresh = () => {};
     let started = false;
     let cancelled = false;
 
@@ -45,6 +50,7 @@ export default function Transition() {
       const [{ gsap }, { ScrollTrigger }] = await Promise.all([import('gsap'), import('gsap/ScrollTrigger')]);
       if (cancelled) return;
       gsap.registerPlugin(ScrollTrigger);
+      refresh = () => ScrollTrigger.refresh();
       const mm = gsap.matchMedia();
 
       mm.add('(prefers-reduced-motion: no-preference)', () => {
@@ -91,8 +97,32 @@ export default function Transition() {
     const io = new IntersectionObserver(([e]) => e.isIntersecting && start(), { rootMargin: '200% 0px' });
     io.observe(el);
 
+    // Product Concepts starts right under the arrow, with the same small gap
+    // at every screen size: the section's bottom margin pulls it up by
+    // however much empty stage is left below the headline block.
+    const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const fit = () => {
+      // Measured from the button (the arrow under it bounces): offsets ignore
+      // transforms, so the pin and the bounce never skew the number.
+      const btn = st.querySelector<HTMLElement>('[data-t-button]');
+      if (rm.matches || !btn) {
+        el.style.marginBottom = '';
+        return;
+      }
+      const below = st.clientHeight - (btn.offsetTop + btn.offsetHeight + ARROW_PX);
+      const next = `${-Math.max(0, Math.round(below - GAP_PX))}px`;
+      if (el.style.marginBottom !== next) {
+        el.style.marginBottom = next;
+        refresh();
+      }
+    };
+    const ro = new ResizeObserver(fit);
+    ro.observe(st);
+    fit();
+
     return () => {
       cancelled = true;
+      ro.disconnect();
       io.disconnect();
       revert();
     };
@@ -102,7 +132,7 @@ export default function Transition() {
     <section
       ref={root}
       data-section="transition"
-      className="relative motion-safe:mb-[-40vh] motion-reduce:!h-[70vh]"
+      className="relative motion-reduce:!h-[70vh]"
       style={{ height: `${100 + PIN_VH}vh` }}
     >
       <div ref={stage} className="relative h-screen overflow-hidden motion-reduce:h-[70vh] bg-black">
@@ -150,6 +180,7 @@ export default function Transition() {
           <p className="mt-8 font-serif italic text-xl sm:text-2xl text-center text-white/80">Flip the switch up top.</p>
           <button
             type="button"
+            data-t-button
             onClick={(e) => switchMode(other, { x: e.clientX, y: e.clientY })}
             className="mt-4 rounded-full border border-white/30 px-5 py-2 text-[13px] text-white/80 hover:text-white hover:border-white/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
           >
