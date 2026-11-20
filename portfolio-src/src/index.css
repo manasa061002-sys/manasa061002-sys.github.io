@@ -1,0 +1,438 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-black text-white antialiased;
+    font-family: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    font-weight: 300;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1, h2, h3, h4, .font-serif {
+    font-family: 'Cormorant Garamond', ui-serif, Georgia, serif;
+  }
+}
+
+/* ---- Scroll reveal ---- */
+.reveal {
+  opacity: 0;
+  transform: translateY(32px);
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1),
+    transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ---- Keyframes ---- */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeInSlow {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes floatUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ---- Scrollbar ---- */
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: #0a0a0a; }
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/* ---- Selection ---- */
+::selection {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.bg-white ::selection,
+.bg-white *::selection {
+  background: rgba(236, 72, 153, 0.25);
+  color: inherit;
+  -webkit-text-fill-color: inherit;
+}
+
+.bg-white ::-moz-selection,
+.bg-white *::-moz-selection {
+  background: rgba(236, 72, 153, 0.25);
+  color: inherit;
+}
+
+/* ---- Utility classes ---- */
+.text-gradient-vibrant {
+  background: linear-gradient(120deg, #ec4899, #facc15, #06b6d4, #ec4899);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 6s ease infinite;
+}
+
+
+section[id] {
+  scroll-margin-top: 4rem;
+}
+
+/* ---- Hero name: letters rise in one by one ---- */
+.name-letter {
+  display: inline-block;
+  animation: letterIn 0.7s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+@keyframes letterIn {
+  from { opacity: 0; transform: translateY(0.45em) rotate(6deg); }
+  to { opacity: 1; transform: none; }
+}
+
+/* ---- Product device screens: the page scrolls inside the device ---- */
+.screen-scroll {
+  background-position: 50% 0%;
+  transition: background-position 1.2s ease;
+}
+.group:hover .screen-scroll,
+.group:focus-visible .screen-scroll {
+  background-position: 50% 100%;
+  transition: background-position 7s ease-in-out;
+}
+@media (hover: none) {
+  /* Touch screens have no hover: pan slowly on their own instead. */
+  .screen-scroll { animation: screenPan 16s ease-in-out infinite alternate; }
+}
+@keyframes screenPan {
+  from { background-position: 50% 0%; }
+  to { background-position: 50% 100%; }
+}
+
+/* ---- Phone frame: slim black bezel with a soft metal edge ---- */
+.phone-frame {
+  background: linear-gradient(145deg, #3f3f46, #0a0a0a 40%, #27272a);
+  box-shadow: 0 0 0 1px #52525b, 0 24px 48px -16px rgba(0, 0, 0, 0.45);
+}
+
+/* ---- "Where structure meets color": rainbow lettering + visible highlight ---- */
+.rainbow-text {
+  background-image: linear-gradient(100deg, #ec4899, #f59e0b, #facc15, #22c55e, #06b6d4, #6366f1, #a855f7, #ec4899);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  /* --fill is animated by GSAP: white → dark → transparent (shows the rainbow) */
+  -webkit-text-fill-color: var(--fill, #ffffff);
+  animation: gradientShift 8s linear infinite;
+}
+.transition-text ::selection,
+.transition-text::selection {
+  background: #000000;
+  color: #ffffff;
+  -webkit-text-fill-color: #ffffff;
+}
+
+/* ---- Creative: designer's desk ---- */
+.desk {
+  background-color: #2f5249;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px),
+    linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+  background-size: 80px 80px, 80px 80px, 16px 16px, 16px 16px;
+}
+.desk-ruler {
+  background-image: repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0 1px, transparent 1px 16px);
+}
+.desk-item {
+  position: relative;
+  display: block;
+  transform: rotate(calc(var(--r) / 2));
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.45s;
+}
+@media (min-width: 768px) {
+  .desk-item {
+    position: absolute;
+    left: var(--x);
+    top: var(--y);
+    width: var(--w);
+    transform: rotate(var(--r));
+  }
+}
+.desk-item:hover,
+.desk-item:focus-visible {
+  transform: rotate(0deg) translateY(-8px) scale(1.04);
+  z-index: 10;
+  filter: drop-shadow(0 18px 24px rgba(0, 0, 0, 0.35));
+}
+.desk-label {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 2px 10px;
+  background: #fffdf5;
+  color: #1f2937;
+  font-family: 'Cormorant Garamond', serif;
+  font-style: italic;
+  font-size: 16px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
+  transform: rotate(-2deg);
+}
+.desk-tape {
+  position: absolute;
+  width: 38%;
+  height: 16px;
+  background: rgba(253, 246, 210, 0.75);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+.desk-envelope {
+  background: linear-gradient(160deg, #fef3c7, #fde68a);
+  clip-path: polygon(0 0, 50% 45%, 100% 0, 100% 100%, 0 100%);
+  border-radius: 4px;
+}
+
+/* ---- Sketchbook animals (moved around by <Roamer>) ---- */
+.bird-bob { animation: birdBob 0.9s ease-in-out infinite alternate; }
+@keyframes birdBob { from { transform: translateY(-3px); } to { transform: translateY(3px); } }
+.bird-flap { animation: birdFlap 0.22s linear infinite alternate; }
+@keyframes birdFlap { from { transform: scaleY(1); } to { transform: scaleY(-0.5); } }
+/* climbing / walking limbs (monkey, chameleon, dog) */
+.monkey-leg-a { animation: limbA 0.5s ease-in-out infinite alternate; }
+.monkey-leg-b { animation: limbA 0.5s ease-in-out infinite alternate-reverse; }
+.monkey-arm { animation: limbA 0.5s ease-in-out infinite alternate-reverse; }
+@keyframes limbA { from { transform: rotate(-14deg); } to { transform: rotate(14deg); } }
+.monkey-tail { animation: catTail 1.6s ease-in-out infinite; }
+/* chameleon: slowly shifts colour, flicks its tongue, rolls its eye */
+.chameleon-hue { animation: chameleonHue 8s ease-in-out infinite alternate; }
+@keyframes chameleonHue { from { filter: hue-rotate(-55deg) saturate(1.2); } to { filter: hue-rotate(5deg); } }
+.chameleon-tongue { animation: tongue 4s ease-out infinite; transform: scaleX(0); }
+@keyframes tongue { 0%, 88%, 100% { transform: scaleX(0); } 92% { transform: scaleX(1); } }
+.cham-leg-a { animation: limbA 1.4s ease-in-out infinite alternate; }
+.cham-leg-b { animation: limbA 1.4s ease-in-out infinite alternate-reverse; }
+.chameleon-eye { animation: lookAround 3s ease-in-out infinite; }
+/* snail */
+.snail-squish { animation: snailSquish 1.6s ease-in-out infinite; }
+@keyframes snailSquish { 0%, 100% { transform: scaleX(1); } 50% { transform: scaleX(1.06) scaleY(0.96); } }
+/* bees: three figure-eight paths, buzzing wings */
+.bee-flight { offset-rotate: 0deg; animation: beeFlight 7s linear infinite; }
+.bee-path-a { offset-path: path('M20 50 C 50 0, 110 0, 140 50 C 170 100, 110 100, 80 50 C 50 0, -10 100, 20 50'); }
+.bee-path-b { offset-path: path('M0 30 C 40 -20, 120 80, 180 20 C 220 -20, 140 -30, 100 40 C 60 100, -30 70, 0 30'); }
+.bee-path-c { offset-path: path('M60 0 C 120 10, 120 90, 60 100 C 0 90, 0 10, 60 0'); }
+@keyframes beeFlight { from { offset-distance: 0%; } to { offset-distance: 100%; } }
+.bee-wing { animation: beeWing 0.08s linear infinite alternate; }
+@keyframes beeWing { from { transform: scaleY(1); } to { transform: scaleY(0.4); } }
+.honey-drip { animation: honeyDrip 2.6s ease-in infinite; }
+@keyframes honeyDrip { 0%, 30% { transform: scaleY(0.4); } 80% { transform: scaleY(2.2); } 100% { transform: scaleY(0.4); } }
+/* cat: tail swish */
+.cat-tail { animation: catTail 2.8s ease-in-out infinite; }
+@keyframes catTail { 0%, 100% { transform: rotate(0); } 50% { transform: rotate(-18deg); } }
+.owl-blink { animation: owlBlink 5s infinite; }
+@keyframes owlBlink { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(0.1); } }
+/* dog */
+.dog-wag { animation: dogWag 0.3s ease-in-out infinite alternate; }
+@keyframes dogWag { from { transform: rotate(-14deg); } to { transform: rotate(16deg); } }
+.dog-pant { animation: dogPant 0.45s ease-in-out infinite alternate; }
+@keyframes dogPant { from { transform: scaleY(0.8); } to { transform: scaleY(1.2); } }
+.dog-tilt { animation: dogTilt 6s ease-in-out infinite; }
+@keyframes dogTilt { 0%, 60%, 100% { transform: rotate(0); } 68%, 85% { transform: rotate(12deg); } }
+/* owl in flight */
+.owl-wing-l { animation: wingL 0.32s ease-in-out infinite alternate; }
+.owl-wing-r { animation: wingR 0.32s ease-in-out infinite alternate; }
+@keyframes wingL { from { transform: rotate(20deg); } to { transform: rotate(-30deg); } }
+@keyframes wingR { from { transform: rotate(-20deg); } to { transform: rotate(30deg); } }
+/* elephant: trunk lifts, water arcs out (6s cycle, drops in the middle third) */
+.elephant-trunk { animation: trunk 6s ease-in-out infinite; }
+@keyframes trunk { 0%, 15%, 70%, 100% { transform: rotate(20deg); } 25%, 60% { transform: rotate(-8deg); } }
+.spray-drop {
+  offset-path: path('M136 22 C 170 -40, 260 -60, 340 10');
+  offset-rotate: 0deg;
+  animation: spray 6s linear infinite;
+  opacity: 0;
+}
+.spray-tall { offset-path: path('M136 22 C 170 -170, 420 -300, 660 -130'); }
+@keyframes spray {
+  0%, 26% { offset-distance: 0%; opacity: 0; }
+  27% { opacity: 1; }
+  52% { offset-distance: 100%; opacity: 0.9; }
+  53%, 100% { offset-distance: 100%; opacity: 0; }
+}
+/* walking cat */
+/* Four-beat walk: each paw is planted and pushed back steadily (stance),
+   then lifted and swung forward quickly (swing). Legs are a quarter-cycle apart. */
+.cat-step { animation: catStep 0.9s linear infinite; }
+@keyframes catStep {
+  0% { transform: rotate(-20deg); }
+  62% { transform: rotate(20deg); animation-timing-function: ease-in; }
+  81% { transform: rotate(0deg) scaleY(0.82); animation-timing-function: ease-out; }
+  100% { transform: rotate(-20deg); }
+}
+.cat-walk-bob { animation: catBob 0.45s ease-in-out infinite alternate; }
+@keyframes catBob { from { transform: translateY(0); } to { transform: translateY(-1.2px); } }
+.cat-head-bob { animation: catHead 0.9s ease-in-out infinite; }
+@keyframes catHead { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(2.5deg); } }
+.cat-lick-head { animation: lickHead 0.7s ease-in-out infinite alternate; }
+@keyframes lickHead { from { transform: rotate(0deg); } to { transform: rotate(10deg); } }
+.cat-tongue { animation: dogPant 0.35s ease-in-out infinite alternate; }
+/* letters glitter after the elephant's spray */
+.glitter-name {
+  /* silver: soft off-white letters with a bright band of light sweeping across */
+  background-image: linear-gradient(110deg, #d6d3d1 0%, #d6d3d1 40%, #ffffff 46%, #ffffff 54%, #d6d3d1 60%, #d6d3d1 100%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: glitter 6s ease-in-out infinite;
+}
+@keyframes glitter {
+  0%, 48% { background-position: 100% 0; filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
+  60% { filter: drop-shadow(0 0 14px rgba(255, 255, 255, 0.35)); }
+  85% { background-position: 0% 0; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.15)); }
+  100% { background-position: 0% 0; filter: drop-shadow(0 0 0 rgba(255, 255, 255, 0)); }
+}
+.glitter-name-dark {
+  background-image: linear-gradient(110deg, #111827 0%, #111827 40%, #9ca3af 50%, #111827 60%, #111827 100%);
+  background-size: 300% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: glitter 6s ease-in-out infinite;
+}
+.sparkle { animation: sparkle 6s ease-in-out infinite; opacity: 0; }
+@keyframes sparkle {
+  0%, 50% { opacity: 0; transform: scale(0) rotate(0deg); }
+  60% { opacity: 1; transform: scale(1) rotate(45deg); }
+  80%, 100% { opacity: 0; transform: scale(0.2) rotate(90deg); }
+}
+.owl-perch .owl-wing-l,
+.owl-perch .owl-wing-r { animation: none; transform: rotate(10deg); }
+
+.desk-ruler-ticks {
+  background-image:
+    repeating-linear-gradient(90deg, rgba(120, 53, 15, 0.55) 0 1px, transparent 1px 6.25%),
+    repeating-linear-gradient(90deg, rgba(120, 53, 15, 0.3) 0 1px, transparent 1px 1.5625%);
+  background-size: 100% 12px, 100% 6px;
+  background-repeat: no-repeat;
+}
+.powerbank-led { animation: led 2.4s ease-in-out infinite; }
+@keyframes led { 0%, 100% { opacity: 0.25; } 50% { opacity: 1; } }
+
+/* ---- Doodle guide ---- */
+.confetti-piece {
+  position: absolute;
+  animation: confettiBurst 1.8s cubic-bezier(0.2, 0.6, 0.4, 1) forwards;
+}
+@keyframes confettiBurst {
+  0% { transform: translate(-50%, -50%) rotate(0); opacity: 1; }
+  45% { transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy))) rotate(calc(var(--rot) * 0.5)); opacity: 1; }
+  100% { transform: translate(calc(-50% + var(--dx) * 1.2), calc(-50% + var(--dy) + 420px)) rotate(var(--rot)); opacity: 0; }
+}
+.doodle-bubble {
+  /* wobbly, hand-drawn edge */
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px;
+}
+.doodle-arm {
+  transform-box: view-box;
+  transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+.doodle-wave {
+  animation: doodleWave 1.4s ease-in-out 3;
+}
+@keyframes doodleWave {
+  0%, 100% { transform: rotate(-140deg); }
+  25% { transform: rotate(-165deg); }
+  75% { transform: rotate(-120deg); }
+}
+.doodle-idle {
+  animation: doodleBob 2.6s ease-in-out infinite;
+}
+@keyframes doodleBob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+.doodle-blink {
+  transform-box: view-box;
+  animation: doodleBlink 4.2s infinite;
+}
+@keyframes doodleBlink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  95% { transform: scaleY(0.1); }
+}
+/* more doodle moves */
+.doodle-dance-l { animation: danceL 0.6s ease-in-out infinite alternate; }
+.doodle-dance-r { animation: danceR 0.6s ease-in-out infinite alternate; }
+@keyframes danceL { from { transform: rotate(20deg); } to { transform: rotate(150deg); } }
+@keyframes danceR { from { transform: rotate(-150deg); } to { transform: rotate(-20deg); } }
+.doodle-groove { animation: groove 0.6s ease-in-out infinite alternate; }
+@keyframes groove { from { transform: rotate(-5deg); } to { transform: rotate(5deg); } }
+.doodle-look { animation: lookAround 2.2s ease-in-out; }
+@keyframes lookAround {
+  0%, 100% { transform: translate(0, 0); }
+  25% { transform: translate(-2px, 0); }
+  50% { transform: translate(-2px, -1px); }
+  75% { transform: translate(2px, 0); }
+}
+.doodle-snooze { animation: snooze 3s ease-in-out infinite; }
+@keyframes snooze { 0%, 100% { transform: rotate(6deg); } 50% { transform: rotate(8deg) translateY(1px); } }
+.doodle-bulb { animation: bulb 1.6s ease-in-out infinite; }
+@keyframes bulb { 0%, 100% { opacity: 1; } 50% { opacity: 0.55; } }
+.doodle-flash { animation: flash 3s steps(1) infinite; }
+@keyframes flash { 0%, 85% { opacity: 0; } 86%, 100% { opacity: 1; } }
+.doodle-splat { transform-box: fill-box; transform-origin: center; animation: splat 1.8s ease-out infinite; }
+@keyframes splat { 0% { transform: scale(0); opacity: 1; } 60% { transform: scale(1); opacity: 1; } 100% { transform: scale(1.1); opacity: 0; } }
+.doodle-juggle-x { animation: juggleX 0.8s ease-in-out infinite alternate; }
+.doodle-juggle-y { animation: juggleY 0.4s cubic-bezier(0.33, 0, 0.67, 1) infinite alternate; }
+@keyframes juggleX { from { transform: translateX(-22px); } to { transform: translateX(22px); } }
+@keyframes juggleY { from { transform: translateY(14px); } to { transform: translateY(-12px); } }
+.doodle-z { animation: zFloat 2.4s ease-out infinite; opacity: 0; }
+@keyframes zFloat { 0% { transform: translate(0, 0); opacity: 0; } 30% { opacity: 1; } 100% { transform: translate(8px, -14px); opacity: 0; } }
+.doodle-eye { transform-box: fill-box; transform-origin: center; transition: transform 0.2s ease; }
+.doodle-btn:hover .doodle-eye { transform: scale(1.45); }
+
+.doodle-walk .doodle-leg-l,
+.doodle-walk .doodle-leg-r {
+  transform-box: view-box;
+  animation: doodleStep 0.35s ease-in-out infinite alternate;
+}
+.doodle-walk .doodle-leg-l { transform-origin: 53px 112px; }
+.doodle-walk .doodle-leg-r { transform-origin: 67px 112px; animation-direction: alternate-reverse; }
+@keyframes doodleStep {
+  from { transform: rotate(-14deg); }
+  to { transform: rotate(14deg); }
+}
+
+/* ---- Reduced motion: switch off every CSS animation and transition ---- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .screen-scroll { background-position: 50% 0% !important; animation: none !important; }
+}
+
+/* Background images with AVIF/WebP where supported (see bgSet in Picture.tsx). */
+.bg-set { background-image: var(--bg); }
+@supports (background-image: image-set(url("x.png") type("image/png"))) {
+  .bg-set { background-image: var(--bg-set); }
+}
+
+/* Width of the doodle guide's margin on the right (wide screens only).
+   The page is padded by this much so she never stands over content. */
+:root { --rail: 0px; }
+@media (min-width: 1024px) { :root { --rail: 148px; } }
+@media (min-width: 1280px) { :root { --rail: 168px; } }
