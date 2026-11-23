@@ -4,35 +4,10 @@ import { m, AnimatePresence, animate, useInView } from 'motion/react';
 import { profile, stats, countries, greetings } from '@/data/portfolio';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import Scribble from '@/components/Scribble';
+import SectionHead from '@/components/SectionHead';
 import { useReducedMotionSafe } from '@/lib/useReducedMotionSafe';
 
 const RubiksCube = lazy(() => import('./RubiksCube'));
-
-/** Name rises in letter by letter. Pure CSS, so it plays straight from the pre-rendered HTML. */
-function AnimatedName({ text }: { text: string }) {
-  const words = text.split(" ");
-  let n = 0;
-  return (
-    <h1
-      aria-label={text}
-      className="mt-5 text-5xl sm:text-7xl font-medium text-white tracking-tight leading-[1.0]"
-    >
-      {words.map((w, wi) => (
-        <span key={wi} aria-hidden className="inline-block whitespace-nowrap">
-          {w.split("").map((ch) => {
-            const i = n++;
-            return (
-              <span key={i} className="name-letter" style={{ animationDelay: `${150 + i * 45}ms` }}>
-                {ch}
-              </span>
-            );
-          })}
-          {wi < words.length - 1 && <span className="inline-block">&nbsp;</span>}
-        </span>
-      ))}
-    </h1>
-  );
-}
 
 /**
  * "1st", "4", "7": renders the real value (also in the pre-rendered HTML) and
@@ -153,8 +128,8 @@ function TradingChart() {
           );
         })}
       </svg>
-      <div className="mt-2 flex items-center gap-2 text-[11px] tabular-nums">
-        <span className="text-white/35 uppercase tracking-[0.15em]">Portfolio</span>
+      <div className="mt-2 flex items-center gap-2 text-[12px] tabular-nums">
+        <span className="text-white/60 uppercase tracking-[0.15em]">Portfolio</span>
         <span className={up ? 'text-emerald-400' : 'text-red-400'}>
           {up ? '▲' : '▼'} {Math.abs(change).toFixed(1)}%
         </span>
@@ -240,7 +215,7 @@ function Greetings() {
   }, [reduced, visible]);
   const g = greetings[i];
   return (
-    <div ref={box} className="mt-5 h-10 relative overflow-hidden" aria-label="Greetings in seven languages">
+    <div ref={box} className="mt-7 h-10 relative overflow-hidden" aria-label="Greetings in seven languages">
       <AnimatePresence mode="wait" initial={false}>
         <m.div
           key={g.word}
@@ -248,10 +223,10 @@ function Greetings() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: -24, opacity: 0 }}
           transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
-          className="flex items-baseline gap-3"
+          className="flex items-baseline justify-center gap-3"
         >
           <span className="font-serif text-3xl text-white">{g.word}</span>
-          <span className="text-[11px] uppercase tracking-[0.15em] text-white/35">{g.lang}</span>
+          <span className="text-[12px] uppercase tracking-[0.15em] text-white/60">{g.lang}</span>
         </m.div>
       </AnimatePresence>
     </div>
@@ -323,48 +298,37 @@ export default function About() {
       <div className="grid lg:grid-cols-[1.3fr_1fr] gap-12 lg:gap-20 items-start">
         {/* Left: identity */}
         <div>
-          <span className="text-[11px] tracking-[0.25em] uppercase text-white/40 font-light">
-            About
-          </span>
-          <AnimatedName text={profile.name} />
-          <m.p
-            initial={{ y: 12 }}
-            animate={{ y: 0 }}
-            transition={{ delay: 0.6, type: 'spring', stiffness: 200, damping: 20 }}
-            className="mt-3 text-lg sm:text-xl text-white/50 font-light tracking-wide"
-          >
-            {profile.positioning}
-          </m.p>
+          {/* The name is set large once, in the welcome screen; About opens with the positioning. */}
+          <SectionHead no="01" label="ABOUT" title={profile.positioning} />
 
-
-          <div className="mt-7 flex flex-wrap gap-2 text-[12px] text-white/50">
+          <div className="flex flex-wrap gap-2">
             {profile.roles.map((r) => (
-              <span key={r} className="px-3.5 py-1 rounded-full border border-white/15">
+              <span key={r} className="tag">
                 {r}
               </span>
             ))}
           </div>
 
           <div className="mt-8 relative pl-6 border-l border-white/15">
-            <Quote className="absolute -left-2.5 top-0 h-4 w-4 text-white/30 bg-black p-0.5" />
-            <p className="text-white/60 leading-[1.75] text-[15px] font-light whitespace-pre-line">
+            <Quote className="absolute -left-2.5 top-0 h-4 w-4 text-white/50 bg-black p-0.5" />
+            <p className="text-white/75 leading-[1.75] text-[16px] font-light whitespace-pre-line">
               {profile.bio}
             </p>
           </div>
 
-          <div className="mt-8 flex flex-col sm:flex-row gap-4 text-[12px] text-white/40">
+          <div className="mt-8 flex flex-col sm:flex-row gap-4 text-[14px] text-white/65">
             <span className="flex flex-col">
               <span className="flex items-center gap-2">
                 <MapPin className="h-3.5 w-3.5" />
                 {profile.locationLine1}
               </span>
-              <span className="ml-5 text-white/30">{profile.locationLine2}</span>
+              <span className="ml-5 text-white/55">{profile.locationLine2}</span>
             </span>
             <a
               href={profile.linkedin}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 hover:text-white transition-colors duration-300"
+              className="link-squiggle flex w-fit items-center gap-2 hover:text-white transition-colors duration-300"
             >
               <Linkedin className="h-3.5 w-3.5" />
               LinkedIn
@@ -376,28 +340,26 @@ export default function About() {
         <div className="reveal relative" style={{ transitionDelay: '120ms' }}>
           <Scribble className="lg:-top-2 lg:right-0">go on, give it a spin ↓</Scribble>
           <LazyCube />
-          <p className="text-center text-[11px] tracking-wide text-white/30 mt-2">
+          <p className="text-center text-[13px] tracking-wide text-white/60 mt-2">
             Drag to spin it around
           </p>
         </div>
       </div>
 
       {/* Stats */}
-      <div className="sketch-grid mt-12 grid sm:grid-cols-3 gap-px bg-white/10">
-        {stats.map((s, i) => (
+      <div className="mt-12 grid sm:grid-cols-3 gap-4">
+        {stats.map((s) => (
           <div
             key={s.label}
-            data-evidence={s.value === '1st' ? 'stat-bloomberg' : undefined}
-            className="sketch-box reveal bg-black p-8 group hover:bg-white/[0.03] transition-colors duration-500"
-            style={{ transitionDelay: `${i * 80}ms` }}
+            className="card sketch-box p-7 sm:p-8"
           >
             <div className="text-5xl sm:text-6xl font-medium text-white">
               <CountUp value={s.value} />
             </div>
-            <div className="mt-4 text-[12px] tracking-wide uppercase text-white/50 font-medium">
+            <div className="mt-4 text-[13px] tracking-wide uppercase text-white/75 font-medium">
               {s.label}
             </div>
-            <div className="mt-2 text-[13px] text-white/30 leading-relaxed font-light">{s.sub}</div>
+            <div className="mt-2 text-[14px] text-white/60 leading-relaxed font-light">{s.sub}</div>
             {s.value === '1st' && <TradingChart />}
             {s.label === 'countries lived in' && <CountryPath />}
             {s.label === 'languages' && <Greetings />}

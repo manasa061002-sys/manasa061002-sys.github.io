@@ -132,9 +132,9 @@ export default function TicTacToe({ onWin }: { onWin: () => void }) {
             status === 'won'
               ? 'text-white'
               : status === 'lost'
-                ? 'text-white/40'
+                ? 'text-white/60'
                 : status === 'draw'
-                  ? 'text-white/40'
+                  ? 'text-white/60'
                   : 'text-white/50'
           }`}
         >
@@ -142,7 +142,7 @@ export default function TicTacToe({ onWin }: { onWin: () => void }) {
         </span>
         <button
           onClick={reset}
-          className="flex items-center gap-1.5 text-[12px] text-white/30 hover:text-white/70 transition-colors duration-300"
+          className="flex items-center gap-1.5 text-[12px] text-white/60 hover:text-white/70 transition-colors duration-300"
         >
           <RefreshCw className="h-3.5 w-3.5" /> Reset
         </button>
@@ -168,7 +168,7 @@ export default function TicTacToe({ onWin }: { onWin: () => void }) {
               <span className="text-white text-4xl leading-none font-bold">✕</span>
             )}
             {cell === 'O' && (
-              <span className="text-white/40 text-4xl leading-none font-bold">◯</span>
+              <span className="text-white/60 text-4xl leading-none font-bold">◯</span>
             )}
           </button>
         ))}

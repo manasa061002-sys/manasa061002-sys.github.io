@@ -50,7 +50,7 @@ export default function CopyBankModal({ onClose }: { onClose: () => void }) {
               className={`flex items-center gap-2 px-4 py-2.5 rounded-t-xl text-[13px] font-medium transition-all duration-300 ${
                 tab === key
                   ? 'bg-gray-50 text-gray-900 border-b-2 border-cyan-500'
-                  : 'text-gray-400 hover:text-gray-600 border-b-2 border-transparent'
+                  : 'text-gray-500 hover:text-gray-600 border-b-2 border-transparent'
               }`}
             >
               <Icon className="h-3.5 w-3.5" />
@@ -62,7 +62,7 @@ export default function CopyBankModal({ onClose }: { onClose: () => void }) {
         <div data-lenis-prevent className="overflow-y-auto px-8 pb-8 bg-gray-50 min-h-0 flex-1">
           <div className="pt-5 pb-3">
             <h4 className="text-[15px] font-medium text-gray-800">{meta.title}</h4>
-            <p className="text-[11px] text-gray-400 mt-0.5">{meta.subtitle}</p>
+            <p className="text-[12px] text-gray-500 mt-0.5">{meta.subtitle}</p>
           </div>
 
           <div className="space-y-4">
@@ -74,18 +74,18 @@ export default function CopyBankModal({ onClose }: { onClose: () => void }) {
               >
                 <div className="flex items-baseline justify-between gap-3 mb-3">
                   <div>
-                    <span className="text-[11px] font-semibold tracking-wide text-cyan-600">
+                    <span className="text-[12px] font-semibold tracking-wide text-cyan-600">
                       {entry.id}
                     </span>
                     <h5 className="text-[15px] font-medium text-gray-900 mt-0.5 leading-snug">
                       {entry.label}
                     </h5>
                   </div>
-                  <span className="text-[10px] text-gray-400 whitespace-nowrap text-right shrink-0">
+                  <span className="text-[12px] text-gray-500 whitespace-nowrap text-right shrink-0">
                     {entry.context}
                   </span>
                 </div>
-                <p className="text-[10px] text-gray-400 mb-3 -mt-2">{entry.date}</p>
+                <p className="text-[12px] text-gray-500 mb-3 -mt-2">{entry.date}</p>
                 <div className="space-y-1.5">
                   {entry.body.map((line, idx) => {
                     const isWriter = line.startsWith('Writer:');
@@ -99,7 +99,7 @@ export default function CopyBankModal({ onClose }: { onClose: () => void }) {
                       );
                     if (isHashtag)
                       return (
-                        <p key={idx} className="text-[11px] text-cyan-700/80 font-medium tracking-wide break-words">
+                        <p key={idx} className="text-[12px] text-cyan-700/80 font-medium tracking-wide break-words">
                           {line}
                         </p>
                       );

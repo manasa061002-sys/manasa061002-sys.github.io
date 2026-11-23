@@ -6,7 +6,8 @@ import { useScrollReveal } from '@/hooks/useScrollReveal';
 import { useScrollLock } from '@/lib/site';
 import { LickingCat, WalkingCat } from '@/components/Critters';
 import Roamer from '@/components/Roamer';
-import Scribble from '@/components/Scribble';
+import SectionHead from '@/components/SectionHead';
+import NaiveDoodle from '@/components/NaiveDoodle';
 import Picture from '@/components/Picture';
 
 /**
@@ -72,7 +73,7 @@ function Lightbox({ item, onClose }: { item: GalleryItem; onClose: () => void })
         <Picture src={item.src} alt={item.title} sizes="(min-width: 768px) 768px, 100vw" className="w-full max-h-[70vh] object-contain bg-gray-50" />
         <div className="mt-4 px-2 flex items-baseline justify-between gap-4">
           <h3 className="text-2xl italic text-gray-900">{item.title}</h3>
-          <span className="text-[10px] tracking-wide px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
+          <span className="text-[12px] tracking-wide px-2.5 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">
             {item.category}
           </span>
         </div>
@@ -177,14 +178,14 @@ export default function Gallery() {
   const open = (src: string) => setActive(itemFor(src));
 
   return (
-    <section id="life" data-section="life" ref={ref} className="relative overflow-x-clip py-12 sm:py-16 px-6 sm:px-10 max-w-5xl mx-auto">
+    <section id="life" data-section="life" ref={ref} className="relative overflow-x-clip pt-16 sm:pt-24 pb-10 sm:pb-14 px-6 sm:px-10 max-w-5xl mx-auto">
       {/* Lucy the cat strolls along each row, stops to lick a letter or a photo, then hops down. */}
       <Roamer
         mode="crawl"
         speed={38}
+        className="z-20"
         aspect={0.75}
         arc={40}
-        className="z-20"
         holdChildren={<LickingCat className="w-16 sm:w-20" />}
         points={[
           { x: 6, y: 11, hold: 3 }, { x: 40, y: 11, hold: 2.5, leap: true },
@@ -196,14 +197,12 @@ export default function Gallery() {
       >
         <WalkingCat className="w-16 sm:w-20" />
       </Roamer>
-      <div className="relative reveal mb-8">
-        <span className="text-[11px] tracking-[0.25em] uppercase text-cyan-600 font-medium">Beyond Work</span>
-        <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-gray-900 tracking-tight">Life & Interests</h2>
-        <Scribble className="lg:right-0 lg:bottom-2">can you find all four groups?</Scribble>
-      </div>
+      <NaiveDoodle kind="cloud" className="right-0 top-36 w-10" />
+      <NaiveDoodle kind="daisy" className="left-0 bottom-32 w-9" delay={0.5} />
+      <SectionHead no="07" label="BEYOND WORK" title="Life & Interests" tone="light" scribble="can you find all four groups?" />
 
-      <div className="reveal max-w-2xl mx-auto">
-        <p aria-live="polite" className="text-center text-[14px] text-gray-600 min-h-[1.5em] mb-5">
+      <div className="max-w-3xl mx-auto">
+        <p aria-live="polite" className="text-center text-[15px] text-gray-700 min-h-[1.5em] mb-5">
           {message}
         </p>
 
@@ -231,14 +230,14 @@ export default function Gallery() {
                     onClick={() => toggle(src)}
                     aria-pressed={on}
                     aria-label={`${itemFor(src).title}${on ? ', selected' : ''}`}
-                    className={`relative aspect-square rounded-xl overflow-hidden ring-offset-2 transition-shadow ${
-                      on ? 'ring-4 ring-gray-900 shadow-lg' : 'ring-0 hover:shadow-md'
+                    className={`naive-tile relative aspect-square overflow-hidden transition-shadow ${
+                      on ? 'ring-4 ring-gray-900 ring-offset-2 shadow-lg' : 'hover:shadow-md'
                     }`}
                   >
                     <Picture sizes="160px" src={thumb(src)} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                     {on && (
                       <span className="absolute inset-0 bg-gray-900/25 flex items-start justify-end p-1.5">
-                        <span className="h-5 w-5 rounded-full bg-gray-900 text-white text-[11px] grid place-items-center">✓</span>
+                        <span className="h-5 w-5 rounded-full bg-gray-900 text-white text-[12px] grid place-items-center">✓</span>
                       </span>
                     )}
                   </m.button>
@@ -313,10 +312,10 @@ export default function Gallery() {
                   key={g.src}
                   onClick={() => setActive(g)}
                   aria-label={`Open photo: ${g.title}`}
-                  className="group relative aspect-square rounded-xl overflow-hidden"
+                  className="group relative aspect-square rounded-xl overflow-hidden transition-transform duration-300 hover:-translate-y-0.5"
                 >
-                  <Picture sizes="160px" src={thumb(g.src)} alt="" loading="lazy" className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                  <span className="absolute inset-x-0 bottom-0 p-1.5 text-[11px] text-white bg-gradient-to-t from-black/60 to-transparent text-left opacity-0 group-hover:opacity-100 transition-opacity">
+                  <Picture sizes="160px" src={thumb(g.src)} alt="" loading="lazy" className="h-full w-full object-cover group-hover:scale-[1.03] transition-transform duration-500" />
+                  <span className="absolute inset-x-0 bottom-0 p-1.5 text-[12px] text-white bg-gradient-to-t from-black/60 to-transparent text-left opacity-0 group-hover:opacity-100 transition-opacity">
                     {g.title}
                   </span>
                 </button>

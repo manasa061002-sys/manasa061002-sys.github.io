@@ -1,7 +1,6 @@
 import { MapPin, Mail, Linkedin, ArrowUp } from 'lucide-react';
 import { profile } from '@/data/portfolio';
 import { scrollToId } from '@/lib/site';
-import { Elephant } from '@/components/Critters';
 
 export default function Footer() {
   return (
@@ -15,30 +14,24 @@ export default function Footer() {
         }}
       />
 
-      <div className="max-w-5xl mx-auto px-6 sm:px-10 py-16">
-        <div className="grid sm:grid-cols-2 gap-10 items-center">
+      <div className="max-w-5xl mx-auto px-6 sm:px-10 pt-10 pb-6">
+        <div className="grid sm:grid-cols-2 gap-6 items-center">
           <div>
-            <div className="flex items-end gap-2">
-              <p className="glitter-name-dark text-2xl sm:text-3xl font-medium">{profile.name}</p>
-              {/* facing left, so the spray arcs back over the name */}
-              <div className="-scale-x-100 w-20 sm:w-24 shrink-0 -mb-2">
-                <Elephant tone="light" className="w-full" />
-              </div>
-            </div>
-            <p className="text-[13px] text-gray-400 mt-2 italic max-w-md leading-relaxed font-serif">
+            <p className="glitter-name-dark text-2xl sm:text-3xl font-medium">{profile.name}</p>
+            <p className="text-[13px] text-gray-500 mt-2 italic max-w-md leading-relaxed font-serif">
               {profile.tagline}
             </p>
-            <div className="mt-6 flex flex-col gap-2 text-[13px] text-gray-400">
+            <div className="mt-4 flex flex-col gap-2 text-[13px] text-gray-500">
               <span className="flex flex-col">
                 <span className="flex items-center gap-2">
                   <MapPin className="h-3.5 w-3.5 text-pink-400" />
                   {profile.locationLine1}
                 </span>
-                <span className="ml-5 text-gray-300">{profile.locationLine2}</span>
+                <span className="ml-5 text-gray-500">{profile.locationLine2}</span>
               </span>
               <a
                 href={`mailto:${profile.email}`}
-                className="flex items-center gap-2 hover:text-gray-900 transition-colors duration-300"
+                className="link-squiggle flex w-fit items-center gap-2 hover:text-gray-900 transition-colors duration-300"
               >
                 <Mail className="h-3.5 w-3.5 text-cyan-400" />
                 {profile.email}
@@ -47,7 +40,7 @@ export default function Footer() {
                 href={profile.linkedin}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 hover:text-gray-900 transition-colors duration-300"
+                className="link-squiggle flex w-fit items-center gap-2 hover:text-gray-900 transition-colors duration-300"
               >
                 <Linkedin className="h-3.5 w-3.5 text-violet-400" />
                 LinkedIn
@@ -66,7 +59,7 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-10 pt-6 border-t border-gray-100 text-[11px] text-gray-400 text-center tracking-wide">
+        <div className="mt-6 pt-4 border-t border-gray-100 text-[12px] text-gray-500 text-center tracking-wide">
           © {new Date().getFullYear()} {profile.name}. Designed & built in
           Berlin.
         </div>

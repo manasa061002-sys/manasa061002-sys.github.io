@@ -1,27 +1,31 @@
-import { Bot, Boxes, GraduationCap, HeartHandshake, TrendingUp } from 'lucide-react';
+import type { ReactNode } from 'react';
+import { Bot, Boxes, GraduationCap, HeartHandshake, TrendingUp, Wrench } from 'lucide-react';
 import { skills } from '@/data/portfolio';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
-import Scribble from '@/components/Scribble';
-import { Bee, HoneyPot } from '@/components/Critters';
-import { SeenIn, SkillChip, useActiveSkill } from '@/components/SkillEvidence';
+import SectionHead from '@/components/SectionHead';
+import NaiveDoodle from '@/components/NaiveDoodle';
 
-const PINK = 'bg-pink-50 border-pink-200/50 hover:border-pink-400 hover:bg-pink-100/50';
-const CYAN = 'bg-cyan-50 border-cyan-200/50 hover:border-cyan-400 hover:bg-cyan-100/50';
-const YELLOW = 'bg-yellow-50 border-yellow-200/50 hover:border-yellow-400 hover:bg-yellow-100/50';
-const EMERALD = 'bg-emerald-50 border-emerald-200/50 hover:border-emerald-400 hover:bg-emerald-100/50';
+
+/** A small group heading: icon in the signature colour, label in grey. */
+function GroupHead({ icon, children }: { icon: ReactNode; children: ReactNode }) {
+  return (
+    <h3 className="mb-5 flex items-center gap-2 font-[Inter,sans-serif] text-[12px] font-medium uppercase tracking-[0.15em] text-gray-600">
+      <span className="text-signature">{icon}</span>
+      {children}
+    </h3>
+  );
+}
 
 export default function Skills() {
   const ref = useScrollReveal<HTMLDivElement>();
-  const { active, setActive, from } = useActiveSkill();
-  const chips = (items: string[], tone: string) => (
-    <>
-      <div className="flex flex-wrap gap-2">
-        {items.map((s) => (
-          <SkillChip key={s} skill={s} tone={tone} active={active} setActive={setActive} />
-        ))}
-      </div>
-      {active && items.includes(active) && <SeenIn skill={active} chipFrom={from} onClose={() => setActive(null)} />}
-    </>
+  const chips = (items: string[]) => (
+    <ul className="flex flex-wrap gap-2">
+      {items.map((s) => (
+        <li key={s} className="naive-chip">
+          {s}
+        </li>
+      ))}
+    </ul>
   );
 
   return (
@@ -29,115 +33,59 @@ export default function Skills() {
       id="skills"
       data-section="skills"
       ref={ref}
-      className="relative isolate overflow-x-clip py-12 sm:py-16 px-6 sm:px-10 max-w-5xl mx-auto"
+      className="relative isolate overflow-x-clip py-16 sm:py-24 px-6 sm:px-10 max-w-5xl mx-auto"
     >
-      {/* A swarm of busy bees. They fly behind the cards and text (never over
-      them), so they only show in the gaps and margins. */}
-      <div className="absolute inset-0 -z-10 pointer-events-none" aria-hidden>
-        <Bee className="absolute right-[4%] top-[8%] w-48 h-28" variant="a" />
-        <Bee className="absolute left-[2%] top-[30%] w-52 h-28" variant="b" style={{ animationDuration: '9s', animationDelay: '-2s' }} />
-        <Bee className="absolute right-[30%] top-[44%] w-48 h-28 hidden sm:block" variant="a" style={{ animationDuration: '6s', animationDelay: '-3s' }} />
-        <Bee className="absolute right-[2%] top-[62%] w-52 h-28" variant="b" style={{ animationDuration: '8s', animationDelay: '-5s' }} />
-        <Bee className="absolute left-[20%] top-[78%] w-48 h-28 hidden sm:block" variant="c" style={{ animationDuration: '5s', animationDelay: '-1s' }} />
-        <Bee className="absolute left-[60%] bottom-4 w-48 h-24" variant="a" style={{ animationDuration: '10s', animationDelay: '-4s' }} />
-        <Bee className="absolute left-[70%] top-[36%] w-48 h-28" variant="a" style={{ animationDuration: '8s', animationDelay: '-5s' }} />
-      </div>
-      <div className="relative reveal mb-10">
-        <span className="text-[11px] tracking-[0.25em] uppercase text-cyan-600 font-medium">
-          Capabilities
-        </span>
-        <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-gray-900 tracking-tight">
-          Skills & Certifications
-          <HoneyPot className="inline-block align-middle ml-3 w-12 sm:w-16 -mt-3" />
-        </h2>
-        <Scribble className="lg:right-0 lg:bottom-2">the toolkit, buzzing</Scribble>
-        <p className="mt-3 text-[13px] text-gray-500">Hover or tap a skill to send the bees to where I used it.</p>
-      </div>
+      <NaiveDoodle kind="squiggle" className="right-0 top-28 w-10" />
+      <NaiveDoodle kind="heart" className="left-0 top-[60%] w-9" delay={0.3} />
+      <SectionHead
+        no="06"
+        label="CAPABILITIES"
+        title="Skills & Certifications"
+        tone="light"
+        scribble="the toolkit"
+      />
 
-      <div className="grid sm:grid-cols-2 gap-6">
-        {/* Core — pink, split by role */}
-        <div
-          className="sketch-box reveal sm:col-span-2 rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-pink-400"
-          style={{ transitionDelay: '0ms' }}
-        >
-          <h3 className="text-[11px] tracking-[0.15em] uppercase text-pink-500 font-medium mb-6">
-            Core Competencies
-          </h3>
-          <div className="grid sm:grid-cols-2 gap-8">
+      <div className="grid gap-4 sm:grid-cols-2">
+        {/* Core competencies, split by role */}
+        <div className="card sketch-box p-7 sm:col-span-2 sm:p-8">
+          <div className="grid gap-8 sm:grid-cols-2">
             {[
               { title: 'Growth', Icon: TrendingUp, items: skills.growth },
               { title: 'Product', Icon: Boxes, items: skills.product },
             ].map(({ title, Icon, items }) => (
               <div key={title}>
-                <div className="flex items-center gap-2 mb-4 text-gray-900">
-                  <Icon className="h-4 w-4 text-pink-500" />
-                  <span className="font-serif text-2xl">{title}</span>
-                </div>
-                {chips(items, PINK)}
+                <GroupHead icon={<Icon className="h-4 w-4" />}>{title}</GroupHead>
+                {chips(items)}
               </div>
             ))}
           </div>
         </div>
 
-        {/* Tools — cyan */}
-        <div
-          className="sketch-box reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-cyan-400"
-          style={{ transitionDelay: '80ms' }}
-        >
-          <h3 className="text-[11px] tracking-[0.15em] uppercase text-cyan-500 font-medium mb-5">
-            Tools
-          </h3>
-          {chips(skills.tools, CYAN)}
+        <div className="card sketch-box p-7 sm:p-8">
+          <GroupHead icon={<Wrench className="h-4 w-4" />}>Tools</GroupHead>
+          {chips(skills.tools)}
         </div>
 
-        {/* AI — yellow */}
-        <div
-          className="sketch-box reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-yellow-400"
-          style={{ transitionDelay: '160ms' }}
-        >
-          <div className="flex items-center gap-2 text-yellow-500 mb-5">
-            <Bot className="h-3.5 w-3.5" />
-            <h3 className="text-[11px] tracking-[0.15em] uppercase font-medium">
-              AI Tools
-            </h3>
-          </div>
-          {chips(skills.ai, YELLOW)}
+        <div className="card sketch-box p-7 sm:p-8">
+          <GroupHead icon={<Bot className="h-4 w-4" />}>AI tools</GroupHead>
+          {chips(skills.ai)}
         </div>
 
-        {/* Certifications — violet */}
-        <div
-          className="sketch-box reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-violet-400"
-          style={{ transitionDelay: '240ms' }}
-        >
-          <div className="flex items-center gap-2 text-violet-500 mb-5">
-            <GraduationCap className="h-3.5 w-3.5" />
-            <h3 className="text-[11px] tracking-[0.15em] uppercase font-medium">
-              Certifications
-            </h3>
-          </div>
+        <div className="card sketch-box p-7 sm:p-8">
+          <GroupHead icon={<GraduationCap className="h-4 w-4" />}>Certifications</GroupHead>
           <ul className="space-y-3">
             {skills.certifications.map((c) => (
-              <li
-                key={c}
-                className="flex items-start gap-2.5 text-[14px] text-gray-700 leading-snug"
-              >
-                <span className="mt-[7px] h-1.5 w-1.5 rounded-full bg-violet-400 shrink-0" />
+              <li key={c} className="flex items-start gap-2.5 text-[15px] leading-snug text-gray-700">
+                <span className="mt-[8px] h-1.5 w-1.5 shrink-0 rounded-full bg-gray-400" />
                 {c}
               </li>
             ))}
           </ul>
         </div>
 
-        {/* Soft skills — emerald */}
-        <div
-          className="sketch-box reveal rounded-[24px] bg-white p-8 shadow-lg hover:shadow-xl transition-shadow duration-500 border-t-4 border-emerald-400"
-          style={{ transitionDelay: '320ms' }}
-        >
-          <div className="flex items-center gap-2 text-emerald-500 mb-5">
-            <HeartHandshake className="h-3.5 w-3.5" />
-            <h3 className="text-[11px] tracking-[0.15em] uppercase font-medium">Soft Skills</h3>
-          </div>
-          {chips(skills.soft, EMERALD)}
+        <div className="card sketch-box p-7 sm:p-8">
+          <GroupHead icon={<HeartHandshake className="h-4 w-4" />}>Soft skills</GroupHead>
+          {chips(skills.soft)}
         </div>
       </div>
     </section>

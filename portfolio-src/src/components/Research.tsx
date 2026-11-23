@@ -1,212 +1,156 @@
 import { useEffect, useRef, useState } from 'react';
-import { m } from 'motion/react';
-import { X, Calendar, Target, FlaskConical } from 'lucide-react';
-import { research, type ResearchPaper } from '@/data/portfolio';
-import { useScrollReveal } from '@/hooks/useScrollReveal';
-import Scribble from '@/components/Scribble';
-import { GlassesOwl } from '@/components/Critters';
+import { ArrowLeft, ArrowRight, BookOpen, X } from 'lucide-react';
+import { research } from '@/data/portfolio';
+import SectionHead from '@/components/SectionHead';
+
+const RINGS = 16;
+const years = research.flatMap((r) => r.period.match(/\d{4}/g) ?? []).map(Number);
+const SPAN = `${Math.min(...years)}–${Math.max(...years)}`;
 
 /**
- * A white owl in glasses that flies to whichever tile the cursor is over,
- * and otherwise drifts between the four tiles on its own.
+ * The research papers, kept in a spiral-bound notebook (black and white, like
+ * the rest of the dark half). It starts closed: a cover titled "Research
+ * Papers". Open it and the cover flips up over the rings onto the contents
+ * page; pick a paper to turn to it, go back to the contents, or close the
+ * notebook again. Each page turn swings the new page down from the binding.
  */
-function TileOwl({ grid, hovered }: { grid: React.RefObject<HTMLDivElement>; hovered: number | null }) {
-  const [spot, setSpot] = useState({ x: 0, y: 0, face: 1 });
-  const idle = useRef(0);
+export default function Research() {
+  const [open, setOpen] = useState(false);
+  // null = the contents page, otherwise the paper's index
+  const [page, setPage] = useState<number | null>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const coverRef = useRef<HTMLButtonElement>(null);
+  const firstRender = useRef(true);
 
-  const tileSpot = (i: number) => {
-    const g = grid.current;
-    const tile = g?.children[i] as HTMLElement | undefined;
-    if (!g || !tile) return null;
-    // Perch on the top edge of the tile, near its right corner.
-    return { x: tile.offsetLeft + tile.offsetWidth - 84, y: tile.offsetTop - 50 };
-  };
-
-  const flyTo = (i: number) => {
-    const p = tileSpot(i);
-    if (!p) return;
-    setSpot((s) => ({ x: p.x, y: p.y, face: p.x < s.x ? -1 : 1 }));
-  };
-
+  // Move keyboard focus with the page, so screen-reader and keyboard users follow the turn.
   useEffect(() => {
-    if (hovered !== null) {
-      flyTo(hovered);
+    if (firstRender.current) {
+      firstRender.current = false;
       return;
     }
-    // Nobody is pointing at a tile: wander from tile to tile.
-    let i = idle.current;
-    flyTo(i);
-    const t = window.setInterval(() => {
-      i = (i + 1 + Math.floor(Math.random() * 3)) % 4;
-      idle.current = i;
-      flyTo(i);
-    }, 3200);
-    return () => window.clearInterval(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hovered]);
+    if (open) pageRef.current?.focus({ preventScroll: true });
+    else coverRef.current?.focus({ preventScroll: true });
+  }, [open, page]);
+
+  const paper = page === null ? null : research[page];
+  const go = (i: number) => setPage((i + research.length) % research.length);
 
   return (
-    <m.div
-      className="absolute left-0 top-0 z-20 pointer-events-none"
-      animate={{ x: spot.x, y: spot.y }}
-      transition={{ type: 'spring', stiffness: 40, damping: 12 }}
-      aria-hidden
-    >
-      <div style={{ transform: `scaleX(${spot.face})`, transition: 'transform 0.2s' }}>
-        <GlassesOwl className="w-14 sm:w-16" />
-      </div>
-    </m.div>
-  );
-}
+    <section id="research" data-section="research" className="py-16 sm:py-24 px-6 sm:px-10 max-w-5xl mx-auto">
+      <SectionHead no="03" label="SCHOLARSHIP" title="Academic Research" />
 
-export default function Research() {
-  const [active, setActive] = useState<ResearchPaper | null>(null);
-  const [hovered, setHovered] = useState<number | null>(null);
-  const grid = useRef<HTMLDivElement>(null);
-  const lastPointer = useRef('mouse');
-  const ref = useScrollReveal<HTMLDivElement>();
-
-  return (
-    <section
-      id="research"
-      data-section="research"
-      ref={ref}
-      className="py-12 sm:py-16 px-6 sm:px-10 max-w-4xl mx-auto"
-    >
-      <div className="relative reveal mb-10">
-        <span className="text-[11px] tracking-[0.25em] uppercase text-white/40 font-light">
-          Scholarship
-        </span>
-        <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-white tracking-tight">
-          Academic Research
-        </h2>
-        <Scribble className="lg:right-0 lg:bottom-2">hover a paper, the owl will follow</Scribble>
-      </div>
-
-      <div className="relative">
-      <TileOwl grid={grid} hovered={hovered} />
-      {/* The filing tray: each paper is a document filed in it. Hover, focus or
-          tap one to pull it out; a "Key finding" stamp lands on it. On touch
-          screens the first tap pulls it out, the second opens it. */}
-      <div className="doc-tray relative rounded-b-[18px] border border-white/10 border-t-0 bg-white/[0.02] px-3 sm:px-5 pt-6">
-        <div ref={grid} className="grid sm:grid-cols-2 gap-4 sm:gap-5">
-          {research.map((paper, i) => {
-            const lifted = hovered === i;
-            return (
-              <button
-                key={paper.id}
-                data-evidence={`research-${paper.id}`}
-                onPointerDown={(e) => (lastPointer.current = e.pointerType)}
-                onClick={() => {
-                  if (lastPointer.current === 'touch' && !lifted) {
-                    setHovered(i);
-                    return;
-                  }
-                  setActive(paper);
-                }}
-                onMouseEnter={() => setHovered(i)}
-                onMouseLeave={() => setHovered(null)}
-                onFocus={() => setHovered(i)}
-                onBlur={() => setHovered(null)}
-                aria-label={`${paper.title}. Open details.`}
-                // Keep className fixed: useScrollReveal adds 'revealed' to it by hand.
-                className="reveal relative rounded-xl text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
-                style={{ transitionDelay: `${i * 80}ms`, zIndex: lifted ? 5 : undefined }}
-              >
-                <div className={`doc sketch-box relative ${lifted ? 'doc-lifted' : ''}`}>
-                  {/* folder tab with the kind of paper */}
-                  <span className="doc-tab absolute -top-5 left-5 rounded-t-lg border border-b-0 border-white/15 bg-white/[0.06] px-3 py-0.5 text-[10px] tracking-wide text-white/60">
-                    {paper.type}
-                  </span>
-                  <div className="doc-paper rounded-xl rounded-tl-none border border-white/15 bg-white/[0.05] p-6 sm:p-7 pb-12">
-                    <div className="flex justify-end">
-                      <span className="text-[11px] text-white/40">{paper.period}</span>
-                    </div>
-                    <h3 className="mt-2 text-xl font-medium text-white">{paper.title}</h3>
-                    <p className="mt-3 text-[13px] text-white/55 leading-[1.65] line-clamp-2 font-light">{paper.summary}</p>
-                    {paper.keyFinding && (
-                      <p className={`doc-finding mt-3 text-[13px] text-white/80 leading-[1.6] ${lifted ? 'is-shown' : ''}`}>{paper.keyFinding}</p>
-                    )}
-                    <div className="mt-5 flex flex-wrap gap-1.5">
-                      {paper.methods.slice(0, 3).map((m) => (
-                        <span key={m} className="text-[10px] px-2 py-0.5 rounded-full text-white/40 border border-white/10">
-                          {m}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  {/* the stamp */}
-                  <span aria-hidden className={`doc-stamp ${lifted ? 'is-stamped' : ''}`}>
-                    Key finding
-                  </span>
-                </div>
-              </button>
-            );
-          })}
+      <div className={`notebook relative mx-auto max-w-4xl ${open ? 'is-open' : ''}`}>
+        {/* the spiral binding */}
+        <div className="notebook-rings" aria-hidden>
+          {Array.from({ length: RINGS }).map((_, i) => (
+            <span key={i} className="notebook-ring" />
+          ))}
         </div>
-        {/* the front lip of the tray, in front of the bottom of each document */}
-        <div aria-hidden className="doc-lip pointer-events-none absolute inset-x-0 bottom-0 h-9 rounded-b-[18px] border-t border-white/15 bg-black" />
-        <div className="h-4" />
-      </div>
-      </div>
 
-      {active && (
+        {/* the pages (under the cover until it is opened) */}
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-md animate-[fadeIn_0.3s_ease]"
-          onClick={() => setActive(null)}
+          ref={pageRef}
+          tabIndex={-1}
+          aria-hidden={!open}
+          key={open ? `p-${page}` : 'closed'}
+          className="notebook-page focus:outline-none"
         >
-          <div
-            className="relative w-full max-w-lg rounded-[28px] border border-white/15 bg-[#0a0a0a] p-9"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <button
-              onClick={() => setActive(null)}
-              className="absolute top-5 right-5 text-white/40 hover:text-white transition-colors duration-300"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <span className="text-[10px] tracking-wide px-2.5 py-0.5 rounded-full border border-white/15 text-white/50">
-              {active.type}
-            </span>
-            <h3 className="mt-5 text-3xl font-medium text-white leading-tight">
-              {active.title}
-            </h3>
-
-            <div className="mt-5 space-y-3 text-[13px]">
-              <div className="flex items-center gap-2 text-white/50">
-                <Calendar className="h-3.5 w-3.5" />
-                {active.period}
+          {paper === null ? (
+            <>
+              <div className="flex items-baseline justify-between gap-3">
+                <p className="notebook-stamp">Contents</p>
+                <button type="button" onClick={() => setOpen(false)} tabIndex={open ? 0 : -1} className="notebook-turn">
+                  <X className="h-4 w-4" aria-hidden /> Close the notebook
+                </button>
               </div>
-              <div className="flex items-center gap-2 text-white/50">
-                <Target className="h-3.5 w-3.5" />
-                {active.scope}
-              </div>
-            </div>
-
-            <p className="mt-6 text-[14px] text-white/60 leading-[1.75] font-light">
-              {active.summary}
-            </p>
-
-            <div className="mt-7">
-              <div className="flex items-center gap-2 text-[11px] tracking-wide uppercase text-white/30 mb-3">
-                <FlaskConical className="h-3.5 w-3.5" />
-                Methods & frameworks
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {active.methods.map((m) => (
-                  <span
-                    key={m}
-                    className="text-xs px-3 py-1 rounded-full border border-white/15 text-white/60"
-                  >
-                    {m}
-                  </span>
+              <h3 className="mt-6 text-[clamp(1.8rem,3.4vw,2.6rem)] font-medium leading-[1.08] text-gray-900">Research papers</h3>
+              <ol className="mt-6 divide-y divide-gray-300 border-y border-gray-300">
+                {research.map((r, i) => (
+                  <li key={r.id}>
+                    <button type="button" onClick={() => setPage(i)} tabIndex={open ? 0 : -1} className="notebook-entry group">
+                      <span className="w-6 shrink-0 text-[13px] tabular-nums text-gray-500">{i + 1}.</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block text-[17px] text-gray-900 group-hover:underline group-hover:underline-offset-4">{r.title}</span>
+                        <span className="mt-0.5 block text-[13px] text-gray-600">
+                          {r.type} · {r.period}
+                        </span>
+                      </span>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-gray-500 transition-transform group-hover:translate-x-1" aria-hidden />
+                    </button>
+                  </li>
                 ))}
+              </ol>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <button type="button" onClick={() => setPage(null)} className="notebook-turn">
+                  <ArrowLeft className="h-4 w-4" aria-hidden /> Contents
+                </button>
+                <span className="text-[13px] text-gray-600">{paper.period}</span>
               </div>
-            </div>
-          </div>
+              <p className="notebook-stamp mt-5">{paper.type}</p>
+              <h3 className="mt-5 text-[clamp(1.8rem,3.4vw,2.6rem)] font-medium leading-[1.08] text-gray-900">{paper.title}</h3>
+              <p className="mt-5 max-w-2xl text-[16px] leading-[1.75] text-gray-700">{paper.summary}</p>
+              {paper.keyFinding && (
+                <p className="mt-5 max-w-2xl border-l-2 border-gray-900 pl-4 text-[16px] leading-[1.7] text-gray-900">
+                  <span className="mr-2 text-[12px] font-semibold uppercase tracking-[0.15em]">Key finding</span>
+                  {paper.keyFinding}
+                </p>
+              )}
+              <div className="mt-7">
+                <p className="text-[12px] font-semibold uppercase tracking-[0.15em] text-gray-500">Methods</p>
+                <ul className="mt-2 space-y-1.5 text-[15px] text-gray-800">
+                  {paper.methods.map((m) => (
+                    <li key={m} className="flex gap-2.5">
+                      <span aria-hidden className="mt-[0.6em] h-1 w-1 shrink-0 rounded-full bg-gray-800" />
+                      {m}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+              <p className="mt-6 text-[14px] text-gray-600">{paper.scope}</p>
+
+              <div className="mt-8 flex items-center justify-between gap-3 border-t border-gray-300 pt-4">
+                <button type="button" onClick={() => go((page ?? 0) - 1)} className="notebook-turn">
+                  <ArrowLeft className="h-4 w-4" aria-hidden /> Previous paper
+                </button>
+                <span className="text-[13px] tabular-nums text-gray-500">
+                  {(page ?? 0) + 1} / {research.length}
+                </span>
+                <button type="button" onClick={() => go((page ?? 0) + 1)} className="notebook-turn">
+                  Next paper <ArrowRight className="h-4 w-4" aria-hidden />
+                </button>
+              </div>
+            </>
+          )}
         </div>
-      )}
+
+        {/* the cover: flips up over the rings when opened */}
+        <button
+          ref={coverRef}
+          type="button"
+          onClick={() => {
+            setPage(null);
+            setOpen(true);
+          }}
+          tabIndex={open ? -1 : 0}
+          aria-hidden={open}
+          aria-label="Open the notebook of research papers"
+          className="notebook-cover"
+        >
+          <span className="notebook-label">
+            <span className="block text-[12px] font-semibold uppercase tracking-[0.25em] text-gray-500">Manasa Rammohan</span>
+            <span className="mt-3 block text-[clamp(2.4rem,5.4vw,3.9rem)] leading-none text-gray-900" style={{ fontFamily: "'Cormorant Garamond', serif" }}>Research Papers</span>
+            <span className="mt-3 block text-[14px] text-gray-600">
+              {research.length} papers · {SPAN}
+            </span>
+          </span>
+          <span className="notebook-open-hint">
+            <BookOpen className="h-4 w-4" aria-hidden /> Open the notebook
+          </span>
+        </button>
+      </div>
     </section>
   );
 }

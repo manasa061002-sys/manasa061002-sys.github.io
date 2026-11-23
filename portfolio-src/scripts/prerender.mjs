@@ -17,11 +17,12 @@ let out = page.replace('<div id="root"></div>', `<div id="root">${html}</div>`);
 // Start downloading the app only after the pre-rendered page has painted.
 out = out.replace(/<script type="module" crossorigin src="([^"]+)"><\/script>/, (_, src) =>
   `<script>(function(){var done=0;function go(){if(done)return;done=1;var s=document.createElement("script");s.type="module";s.src="${src}";document.head.appendChild(s)}` +
-    `function later(){setTimeout(go,3500)}` +
+    `function later(){setTimeout(go,0)}` +
     `if(document.readyState==="complete")later();else addEventListener("load",later);` +
     `["pointermove","pointerdown","keydown","touchstart","wheel","scroll"].forEach(function(e){addEventListener(e,go,{once:true,passive:true})})})()</script>`);
-// The app wakes up on the first sign of a visitor (mouse move, touch, scroll,
-// key) or 3.5 s after load. The pre-rendered hero is fully visible before that.
+// The app starts as soon as the page has loaded (or on the first sign of a
+// visitor, if that comes sooner): the site opens on the opening story, and
+// until then the pre-rendered page is the story's blank black page.
 // Preload the two fonts the hero uses so text does not swap late.
 const assets = fs.readdirSync(path.join(dist, "assets"));
 const preload = ["inter-latin-300-normal", "cormorant-garamond-latin-500-normal"]

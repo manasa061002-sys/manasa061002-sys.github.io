@@ -28,7 +28,7 @@ const SCRIPT: Record<string, { text: string; pose: Pose; prop: Prop }> = {
   experience: { text: "Briefcase packed. This is where I've worked.", pose: 'carry', prop: 'briefcase' },
   research: { text: 'My research papers. I looked very closely.', pose: 'magnify', prop: 'magnifier' },
   transition: { text: 'Hold on, things are about to get colorful…', pose: 'cheer', prop: 'none' },
-  products: { text: 'Lightbulb moment! Pick a device below to try a project live.', pose: 'idea', prop: 'bulb' },
+  products: { text: 'Lightbulb moment! Unlock the laptop and pick an app.', pose: 'idea', prop: 'bulb' },
   creative: { text: 'Welcome to my desk! Click anything to look closer.', pose: 'paint', prop: 'brush' },
   skills: { text: 'My toolkit, all in one place.', pose: 'juggle', prop: 'balls' },
   life: { text: 'Say cheese! Can you sort my photos into four groups?', pose: 'camera', prop: 'camera' },
@@ -141,7 +141,10 @@ const POP_AT = 6; // clicks within POP_WINDOW_MS
 const POP_WINDOW_MS = 5000;
 
 export default function DoodleGuide() {
-  const { active, light, mode } = useSite();
+  const { active, light, mode, introDone } = useSite();
+  // When the opening story plays, the girl from the story walks to this corner herself,
+  // so the guide then simply appears there (no second walk-in).
+  const [afterStory] = useState(() => !introDone);
   // The visitor's own clock and language: pyjamas at night, coffee in the morning,
   // and "hello" in their language if it is one of mine.
   const part = useDayPart();
@@ -370,18 +373,32 @@ export default function DoodleGuide() {
     else moves[Math.floor(Math.random() * moves.length)]();
   };
 
+  // After the story she takes over in her corner: start fresh (awake, welcome bubble showing).
+  useEffect(() => {
+    if (!introDone || !afterStory) return;
+    // her idle clock starts now, not when the page loaded (or she would nap at once)
+    lastActivity.current = Date.now();
+    asleepRef.current = false;
+    setAsleep(false);
+    setQuip(null);
+    setBubble(true);
+    setEntered(true);
+  }, [introDone, afterStory]);
+
+  if (!introDone) return null;
+
   const anim = (cls: string) => (reduced ? '' : cls);
-  // On the left half of the screen the speech bubble goes on her right.
+  // The speech bubble sits above her head; on the left half of the screen it lines up with her left edge.
   const onLeft = spot.x < -vw * 0.45;
   const rightArmAnim = trick === 'dance' ? 'doodle-dance-r' : pose === 'wave' ? 'doodle-wave' : '';
   const leftArmAnim = trick === 'dance' ? 'doodle-dance-l' : '';
 
   return (
     <m.div
-      className={`fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-30 flex items-end gap-1 pointer-events-none select-none ${
-        onLeft ? 'flex-row-reverse' : ''
+      className={`fixed bottom-3 right-3 sm:bottom-5 sm:right-5 z-30 flex flex-col gap-3 pointer-events-none select-none ${
+        onLeft ? 'items-start' : 'items-end'
       }`}
-      initial={reduced ? false : { x: 160 }}
+      initial={reduced || afterStory ? false : { x: 160 }}
       animate={{ x: spot.x }}
       transition={entered ? { duration: 1.3, ease: [0.45, 0, 0.55, 1] } : { delay: 1.2, duration: 1.4, ease: [0.22, 1, 0.36, 1] }}
       onAnimationComplete={() => setEntered(true)}
@@ -394,8 +411,8 @@ export default function DoodleGuide() {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.9 }}
             transition={{ type: 'spring', stiffness: 380, damping: 26 }}
-            style={{ color: ink, background: paper, borderColor: ink, originX: onLeft ? 0 : 1, originY: 1 }}
-            className="doodle-bubble pointer-events-auto relative mb-20 sm:mb-28 max-w-[170px] sm:max-w-[220px] border-2 px-3.5 py-2.5 pr-6 font-serif italic text-[14px] sm:text-[16px] leading-snug transition-colors duration-500"
+            style={{ color: ink, background: paper, borderColor: ink, originX: onLeft ? 0.2 : 0.8, originY: 1 }}
+            className="doodle-bubble pointer-events-auto relative max-w-[170px] sm:max-w-[220px] border-2 px-3.5 py-2.5 pr-6 font-serif italic text-[14px] sm:text-[16px] leading-snug transition-colors duration-500"
             role="status"
             aria-live="polite"
           >
@@ -410,13 +427,13 @@ export default function DoodleGuide() {
             </button>
             {/* tail */}
             <svg
-              className={`absolute bottom-3 ${onLeft ? '-left-[13px]' : '-right-[13px]'}`}
-              width="16"
-              height="14"
-              viewBox="0 0 16 14"
+              className={`absolute -bottom-[14px] ${onLeft ? 'left-[30px] sm:left-[46px]' : 'right-[30px] sm:right-[46px]'}`}
+              width="14"
+              height="16"
+              viewBox="0 0 14 16"
               aria-hidden
             >
-              <path d={onLeft ? 'M16 2 L1 7 L16 12' : 'M0 2 L15 7 L0 12'} fill={paper} stroke={ink} strokeWidth="2" strokeLinejoin="round" />
+              <path d="M2 0 L7 15 L12 0" fill={paper} stroke={ink} strokeWidth="2" strokeLinejoin="round" />
             </svg>
           </m.div>
         )}
@@ -494,20 +511,20 @@ export default function DoodleGuide() {
                 {prop === 'briefcase' && (
                   <g strokeWidth="2.2">
                     <path d="M82 106 L82 103 L88 103 L88 106" fill="none" />
-                    <rect x="77" y="106" width="16" height="11" rx="1.5" fill="#a16207" />
+                    <rect x="77" y="106" width="16" height="11" rx="1.5" fill={paper} />
                   </g>
                 )}
                 {prop === 'magnifier' && (
                   <g strokeWidth="2.2">
                     <path d="M85 104 L88 110" fill="none" />
-                    <circle cx="90.5" cy="115" r="6" fill="#bae6fd" fillOpacity="0.5" />
+                    <circle cx="90.5" cy="115" r="6" fill="none" />
                   </g>
                 )}
               </g>
 
               {/* body */}
               <path d="M46 76 C 55 74, 65 74, 74 76 L 78 113 C 66 115, 54 115, 42 113 Z" />
-              {/* outfit: a blazer for the Analyst, paint-splattered overalls for the Artist */}
+              {/* outfit: a blazer on the dark half, paint-splattered overalls on the paper half */}
               {night ? (
                 // pyjamas (late at night, whatever the mode)
                 <g strokeWidth="2">
@@ -568,6 +585,15 @@ export default function DoodleGuide() {
                     <circle className="doodle-eye" cx="51" cy="44" r="2.3" />
                     <circle className="doodle-eye" cx="69" cy="44" r="2.3" />
                   </g>
+                </g>
+              )}
+
+              {/* reading glasses for the research papers */}
+              {active === 'research' && (
+                <g className="doodle-glasses" fill="none" strokeWidth="2">
+                  <circle cx="51" cy="44" r="6.5" />
+                  <circle cx="69" cy="44" r="6.5" />
+                  <path d="M57.5 43.5 Q60 41.5 62.5 43.5 M44.5 43 L36 40.5 M75.5 43 L84 40.5" />
                 </g>
               )}
 

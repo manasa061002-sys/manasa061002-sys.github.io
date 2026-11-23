@@ -5,7 +5,7 @@ import { creativeProjects, type CreativeProject } from '@/data/portfolio';
 import { useScrollReveal } from '@/hooks/useScrollReveal';
 import CopyBankModal from '@/components/CopyBankModal';
 import Picture from '@/components/Picture';
-import Scribble from '@/components/Scribble';
+import SectionHead from '@/components/SectionHead';
 import DesignDesk from '@/components/DesignDesk';
 
 export default function Creative() {
@@ -41,18 +41,12 @@ export default function Creative() {
       id="creative"
       data-section="creative"
       ref={ref}
-      className="zone-keep desk relative overflow-x-clip py-14 sm:py-20"
+      className="zone-keep desk relative overflow-x-clip py-16 sm:py-24"
     >
       {/* ruler ticks along the top edge of the mat */}
       <div className="desk-ruler absolute top-0 inset-x-0 h-3" aria-hidden />
-      <div className="reveal relative mb-10 px-6 sm:px-10 max-w-5xl mx-auto">
-        <span className="text-[11px] tracking-[0.25em] uppercase text-emerald-200 font-medium">
-          Craft
-        </span>
-        <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-white tracking-tight">
-          Creative Projects & Decks
-        </h2>
-        <Scribble className="lg:right-10 lg:bottom-2 !text-pink-300">click anything on the desk</Scribble>
+      <div className="relative px-6 sm:px-10 max-w-5xl mx-auto">
+        <SectionHead no="05" label="CRAFT" title="Creative Projects & Decks" scribble="click anything on the desk" />
       </div>
 
       <div className="reveal px-6 sm:px-10 lg:px-14">
@@ -99,8 +93,8 @@ export default function Creative() {
                 }}
               />
               <div className="hidden absolute inset-0 flex flex-col items-center justify-center bg-gray-50 gap-2">
-                <ImageOff className="h-10 w-10 text-gray-300" />
-                <span className="text-xs text-gray-400">Image not available</span>
+                <ImageOff className="h-10 w-10 text-gray-500" />
+                <span className="text-xs text-gray-500">Image not available</span>
               </div>
               {active.images.length > 1 && (
                 <>
@@ -149,7 +143,7 @@ export default function Creative() {
               <p className="mt-5 text-[14px] text-gray-600 leading-[1.75]">
                 {active.description}
               </p>
-              <p className="mt-2 text-[11px] text-gray-400">{active.context}</p>
+              <p className="mt-2 text-[12px] text-gray-500">{active.context}</p>
             </div>
           </div>
         </div>

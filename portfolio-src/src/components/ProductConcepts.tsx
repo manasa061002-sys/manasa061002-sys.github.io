@@ -1,84 +1,198 @@
-import { useEffect, useRef, useState } from 'react';
-import { X, Calendar, CheckCircle2, ArrowUpRight, FileText } from 'lucide-react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ArrowUpRight, Calendar, CheckCircle2, X } from 'lucide-react';
 import { AnimatePresence, m } from 'motion/react';
 import { productConcepts, type ProductConcept } from '@/data/portfolio';
-import { useScrollReveal } from '@/hooks/useScrollReveal';
-import { useScrollLock } from '@/lib/site';
-import { Snail } from '@/components/Critters';
 import Picture, { bgSet } from '@/components/Picture';
-import Scribble from '@/components/Scribble';
-import Roamer from '@/components/Roamer';
+import SectionHead from '@/components/SectionHead';
+import { useScrollLock } from '@/lib/site';
 import MetricChart from '@/components/MetricChart';
-import { CritiqueBack, DevilButton, FlipCard } from '@/components/Critique';
+import NaiveDoodle from '@/components/NaiveDoodle';
+
+const PDF_PAGES = 7;
+
+/** Each project's app icon: a colour and a little hand-drawn picture (naive style). */
+const APPS: Record<string, { colour: string; ink: string; short: string; glyph: ReactNode }> = {
+  kayysee: {
+    colour: '#fde047',
+    ink: '#713f12',
+    short: 'KayYSee',
+    // an ID card with a tick
+    glyph: (
+      <>
+        <rect x="9" y="15" width="30" height="20" rx="3" />
+        <circle cx="17" cy="24" r="3.5" />
+        <path d="M14 31 C 15 28, 19 28, 20 31" />
+        <path d="M25 22 L 27.5 25 L 33 19" />
+      </>
+    ),
+  },
+  'dash-dine-eco': {
+    colour: '#86efac',
+    ink: '#14532d',
+    short: 'Dash & Dine',
+    // a basket with a leaf
+    glyph: (
+      <>
+        <path d="M10 22 L 38 22 L 34 37 L 14 37 Z" />
+        <path d="M16 22 C 17 14, 31 14, 32 22" />
+        <path d="M18 27 L 18 33 M24 27 L 24 33 M30 27 L 30 33" />
+        <path d="M33 12 C 38 10, 40 14, 37 17 C 35 18, 33 16, 33 12 Z" />
+      </>
+    ),
+  },
+  'fintech-budget': {
+    colour: '#f9a8d4',
+    ink: '#831843',
+    short: 'Fresh Farm',
+    // a little barn on a hill
+    glyph: (
+      <>
+        <path d="M6 37 C 14 31, 34 31, 42 37" />
+        <path d="M15 33 L 15 22 L 24 15 L 33 22 L 33 33" />
+        <path d="M21 33 L 21 26 L 27 26 L 27 33" />
+      </>
+    ),
+  },
+  'blockchain-land-registry': {
+    colour: '#7dd3fc',
+    ink: '#0c4a6e',
+    short: 'Land Registry',
+    // three linked blocks
+    glyph: (
+      <>
+        <rect x="8" y="12" width="11" height="11" rx="2" />
+        <rect x="29" y="12" width="11" height="11" rx="2" />
+        <rect x="18.5" y="27" width="11" height="11" rx="2" />
+        <path d="M19 17.5 L 29 17.5 M14 23 L 20 27 M34 23 L 28 27" />
+      </>
+    ),
+  },
+};
 
 /**
- * The screenshot inside a device. On hover (or keyboard focus) it scrolls from
- * the top of the page to the bottom, like someone browsing it.
+ * An iframe rendered at a real device width, scaled down to fit its box. With
+ * `fill`, the box takes all the room it is given and the page's visible height
+ * stretches to match (so a website fills its window, no empty strip below);
+ * otherwise the box keeps the device's shape (a phone). The project's
+ * screenshot shows underneath until the live page has loaded.
  */
-function Screen({ src, className = '' }: { src: string; className?: string }) {
+function ScaledFrame({ src, w, h, title, poster, fill = false }: { src: string; w: number; h: number; title: string; poster: string; fill?: boolean }) {
+  const box = useRef<HTMLDivElement>(null);
+  const [size, setSize] = useState({ scale: 0, height: h });
+  const [loaded, setLoaded] = useState(false);
+  useEffect(() => {
+    const el = box.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([e]) => {
+      const scale = e.contentRect.width / w;
+      setSize({ scale, height: fill && scale > 0 ? Math.max(h * 0.5, e.contentRect.height / scale) : h });
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [w, h, fill]);
   return (
     <div
-      className={`screen-scroll bg-set absolute inset-0 bg-no-repeat ${className}`}
-      style={{ ...bgSet(src, 960), backgroundSize: '100% auto' } as React.CSSProperties}
-      role="img"
-      aria-hidden
-    />
+      ref={box}
+      className={`bg-set relative w-full overflow-hidden bg-white bg-no-repeat ${fill ? 'h-full' : ''}`}
+      style={{ ...(fill ? {} : { aspectRatio: `${w} / ${h}` }), ...bgSet(poster, 960), backgroundSize: '100% auto', backgroundPosition: '50% 0' } as React.CSSProperties}
+    >
+      {size.scale > 0 && (
+        <iframe
+          src={src}
+          title={title}
+          onLoad={() => setLoaded(true)}
+          className={`absolute left-0 top-0 border-0 bg-white transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
+          style={{ width: w, height: size.height, transform: `scale(${size.scale})`, transformOrigin: '0 0' }}
+        />
+      )}
+    </div>
   );
 }
 
-function BrowserMock({ p }: { p: ProductConcept }) {
-  return (
-    <div className="h-[92%] max-w-full aspect-[16/11] flex flex-col rounded-xl overflow-hidden bg-white shadow-xl ring-1 ring-black/10">
-      <div className="flex items-center gap-1.5 px-3 h-7 shrink-0 bg-gray-100 border-b border-gray-200">
-        <span className="h-2 w-2 rounded-full bg-red-400" />
-        <span className="h-2 w-2 rounded-full bg-yellow-400" />
-        <span className="h-2 w-2 rounded-full bg-green-400" />
-        <span className="ml-2 flex-1 truncate rounded-md bg-white px-2 py-0.5 text-[9px] text-gray-400">
-          {p.screen.label}
-        </span>
+/** The prototype itself, in the way it is meant to be seen: a website, an app or a deck. */
+function Prototype({ p }: { p: ProductConcept }) {
+  if (p.screen.kind === 'phone') {
+    return (
+      <div className="flex h-full items-center justify-center bg-[#eef2ec] p-3">
+        <div className="phone-frame h-full max-h-full rounded-[30px] p-[4px]" style={{ aspectRatio: '390 / 844' }}>
+          <div className="relative h-full overflow-hidden rounded-[26px] bg-white">
+            <ScaledFrame src={p.link ?? ''} w={390} h={844} title={`${p.title} (live app)`} poster={p.screen.src} />
+            <span className="pointer-events-none absolute left-1/2 top-1.5 h-4 w-16 -translate-x-1/2 rounded-full bg-black" />
+          </div>
+        </div>
       </div>
-      <div className="relative flex-1 bg-gray-50">
-        <Screen src={p.screen.src} />
+    );
+  }
+  if (p.screen.kind === 'pdf') {
+    return (
+      <div className="h-full space-y-3 overflow-y-auto overscroll-contain bg-gray-200 p-3" data-lenis-prevent>
+        {Array.from({ length: PDF_PAGES }).map((_, i) => (
+          <Picture
+            key={i}
+            sizes="(min-width: 768px) 560px, 100vw"
+            src={`/images/pdf/blockchain-land-registry/page-${i + 1}.jpg`}
+            alt={`${p.title}, page ${i + 1}`}
+            loading="lazy"
+            className="block w-full rounded shadow"
+          />
+        ))}
+      </div>
+    );
+  }
+  return (
+    <div className="flex h-full flex-col bg-white" data-lenis-prevent>
+      <div className="flex h-7 shrink-0 items-center gap-1.5 border-b border-gray-200 bg-gray-100 px-3">
+        <span className="ml-1 flex-1 truncate rounded bg-white px-2 py-0.5 text-[12px] text-gray-500">{p.screen.label}</span>
+      </div>
+      <div className="min-h-0 flex-1">
+        <ScaledFrame fill src={p.link ?? ''} w={1280} h={800} title={`${p.title} (live site)`} poster={p.screen.src} />
       </div>
     </div>
   );
 }
 
-function PhoneMock({ p }: { p: ProductConcept }) {
+/** The project's info, beside the prototype in its window. */
+function Info({ p }: { p: ProductConcept }) {
   return (
-    <div className="phone-frame relative h-full aspect-[9/19.5] rounded-[22px] p-[3px]">
-      <div className="relative h-full w-full rounded-[19px] overflow-hidden bg-white">
-        <Screen src={p.screen.src} />
-        <span className="absolute top-[3%] left-1/2 -translate-x-1/2 h-[3.5%] w-[30%] rounded-full bg-black" />
-      </div>
+    <div className="h-full overflow-y-auto overscroll-contain bg-[#fffdf7] p-5" data-lenis-prevent>
+      <h3 className="text-[22px] font-medium leading-tight text-gray-900">{p.title}</h3>
+      <p className="mt-2 flex items-center gap-1.5 text-[13px] text-gray-600">
+        <Calendar className="h-3.5 w-3.5" aria-hidden /> {p.period}
+      </p>
+      <p className="mt-4 text-[14px] leading-[1.7] text-gray-700">{p.summary}</p>
+      {p.metric && <MetricChart {...p.metric} onLight />}
+      {p.note && <p className="mt-3 rounded-[10px] bg-amber-100 px-3 py-2 text-[13px] leading-relaxed text-amber-900">{p.note}</p>}
+      <ul className="mt-5 space-y-2.5">
+        {p.highlights.map((h) => (
+          <li key={h} className="flex items-start gap-2 text-[14px] text-gray-700">
+            <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+            <span>{h}</span>
+          </li>
+        ))}
+      </ul>
+      {p.link && (
+        <a
+          href={p.link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-6 inline-flex items-center gap-1.5 rounded-full bg-gray-900 px-4 py-2 text-[13px] font-medium text-white hover:bg-gray-700"
+        >
+          {p.screen.kind === 'pdf' ? 'Open the PDF' : 'Open in a new tab'} <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+        </a>
+      )}
     </div>
   );
 }
 
-function PdfMock({ p }: { p: ProductConcept }) {
-  return (
-    <div className="w-[85%] h-full rounded-lg overflow-hidden bg-gray-200 shadow-xl ring-1 ring-black/10 flex flex-col">
-      <div className="flex items-center gap-2 px-3 h-7 bg-gray-700 text-white/80 text-[9px] shrink-0">
-        <FileText className="h-3 w-3" />
-        <span className="truncate flex-1">{p.screen.label}</span>
-        <span className="text-white/50">PDF</span>
-      </div>
-      <div className="relative flex-1">
-        <Screen src={p.screen.src} />
-      </div>
-    </div>
-  );
-}
-
-function Device({ p }: { p: ProductConcept }) {
-  if (p.screen.kind === 'phone') return <PhoneMock p={p} />;
-  if (p.screen.kind === 'pdf') return <PdfMock p={p} />;
-  return <BrowserMock p={p} />;
-}
-
-function Tile({ p, onClose }: { p: ProductConcept; onClose: () => void }) {
-  useScrollLock(true);
+/** A window on the laptop's desktop: the prototype on the left, its info on the right. */
+function Window({ p, origin, onClose }: { p: ProductConcept; origin: string; onClose: () => void }) {
+  const close = useRef<HTMLButtonElement>(null);
+  const app = APPS[p.id];
+  // On phones the window covers the whole screen, so the page behind it should not scroll.
+  const [fullScreen] = useState(() => window.matchMedia('(max-width: 767px)').matches);
+  useScrollLock(fullScreen);
   useEffect(() => {
+    close.current?.focus({ preventScroll: true });
     const onKey = (e: KeyboardEvent) => e.key === 'Escape' && onClose();
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -86,251 +200,191 @@ function Tile({ p, onClose }: { p: ProductConcept; onClose: () => void }) {
 
   return (
     <m.div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-md"
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      onClick={onClose}
+      role="dialog"
+      aria-label={p.title}
+      className="os-window"
+      style={{ transformOrigin: origin }}
+      initial={{ opacity: 0, scale: 0.2 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.2 }}
+      transition={{ type: 'spring', stiffness: 320, damping: 30 }}
     >
-      <m.div
-        role="dialog"
-        aria-modal="true"
-        aria-label={p.title}
-        data-lenis-prevent
-        className="relative w-full max-w-2xl rounded-[28px] bg-white overflow-y-auto shadow-2xl"
-        style={{ maxHeight: 'calc(100vh - 2rem)' }}
-        initial={{ opacity: 0, y: 40, scale: 0.96 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 20, scale: 0.98 }}
-        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-        onClick={(e) => e.stopPropagation()}
-      >
-        <button
-          onClick={onClose}
-          aria-label="Close"
-          className="absolute top-4 right-4 z-10 text-white/90 hover:text-white bg-black/35 rounded-full p-2 backdrop-blur-md transition-colors duration-300"
-        >
-          <X className="h-5 w-5" />
+      <div className="os-titlebar">
+        <button ref={close} type="button" onClick={onClose} aria-label={`Close ${app?.short ?? p.title}`} className="os-close">
+          <X className="h-2.5 w-2.5" aria-hidden />
         </button>
-        <div className={`group relative h-64 sm:h-72 flex items-center justify-center bg-gradient-to-br ${p.accent}`}>
-          <div className="absolute inset-0 bg-white/70" />
-          <div className="relative h-full w-full flex items-center justify-center py-6">
-            <Device p={p} />
-          </div>
+        <span className="h-3 w-3 rounded-full bg-[#febc2e]" aria-hidden />
+        <span className="h-3 w-3 rounded-full bg-[#28c840]" aria-hidden />
+        <span className="flex-1 truncate text-center text-[13px] font-medium text-gray-700">{app?.short ?? p.title}</span>
+        <button type="button" onClick={onClose} className="os-close-text">
+          Close
+        </button>
+      </div>
+      <div className="os-body">
+        <div className="min-h-0 min-w-0">
+          <Prototype p={p} />
         </div>
-        <div className="p-7 sm:p-9">
-          <h3 className="text-3xl font-medium text-gray-900 leading-tight">{p.title}</h3>
-          <div className="mt-3 flex items-center gap-2 text-[13px] text-gray-500">
-            <Calendar className="h-3.5 w-3.5 text-pink-500" />
-            {p.period}
-          </div>
-          <p className="mt-5 text-[14px] text-gray-600 leading-[1.75]">{p.summary}</p>
-          {p.metric && <MetricChart {...p.metric} onLight />}
-          {p.note && (
-            <p className="mt-3 px-3 py-2 rounded-[10px] bg-amber-100 text-amber-800 text-[12px] leading-relaxed">{p.note}</p>
-          )}
-          <div className="mt-7">
-            <div className="text-[11px] tracking-wide uppercase text-gray-400 mb-3 font-medium">Key highlights</div>
-            <ul className="space-y-2.5">
-              {p.highlights.map((h) => (
-                <li key={h} className="flex items-start gap-2.5 text-[14px] text-gray-700">
-                  <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-emerald-500" />
-                  <span>{h}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-          {p.link && (
-            <a
-              href={p.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-8 inline-flex items-center gap-1.5 rounded-full bg-black text-white px-5 py-2.5 text-[13px] font-medium hover:bg-gray-800 transition-colors"
-            >
-              {p.linkLabel || 'View prototype'}
-              {!p.linkLabel && <ArrowUpRight className="h-4 w-4" />}
-            </a>
-          )}
+        <div className="min-h-0 min-w-0 border-l border-gray-200">
+          <Info p={p} />
         </div>
-      </m.div>
+      </div>
     </m.div>
   );
 }
 
-const PDF_PAGES = 7;
-
-/** An iframe rendered at a real device size, scaled down to fit its box. */
-function ScaledFrame({ src, w, h, title }: { src: string; w: number; h: number; title: string }) {
-  const box = useRef<HTMLDivElement>(null);
-  const [scale, setScale] = useState(0);
-  useEffect(() => {
-    const el = box.current;
-    if (!el) return;
-    const ro = new ResizeObserver(([e]) => setScale(e.contentRect.width / w));
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [w]);
+/** The desktop wallpaper: a naive, hand-drawn sun, cloud and hills. */
+function Wallpaper() {
   return (
-    <div ref={box} className="relative w-full overflow-hidden bg-white" style={{ aspectRatio: `${w} / ${h}` }}>
-      {scale > 0 && (
-        <iframe
-          src={src}
-          title={title}
-          loading="lazy"
-          className="absolute left-0 top-0 border-0 bg-white"
-          style={{ width: w, height: h, transform: `scale(${scale})`, transformOrigin: '0 0' }}
-        />
-      )}
+    <svg className="os-wallpaper" viewBox="0 0 800 500" preserveAspectRatio="xMidYMax slice" aria-hidden>
+      <g className="os-sun">
+        <circle cx="738" cy="66" r="28" fill="#fde68a" stroke="#f59e0b" strokeWidth="4" />
+        {Array.from({ length: 10 }).map((_, i) => {
+          const a = (i / 10) * Math.PI * 2;
+          return (
+            <path
+              key={i}
+              d={`M${738 + Math.cos(a) * 39} ${66 + Math.sin(a) * 39} L${738 + Math.cos(a) * 53} ${66 + Math.sin(a) * 53}`}
+              stroke="#f59e0b"
+              strokeWidth="5"
+              strokeLinecap="round"
+            />
+          );
+        })}
+      </g>
+      <path d="M-20 430 C 140 360, 300 380, 420 420 C 540 460, 680 360, 820 400 L 820 520 L -20 520 Z" fill="#bbf7d0" stroke="#22c55e" strokeWidth="4" />
+      <path d="M-20 470 C 160 430, 360 470, 520 455 C 650 445, 740 470, 820 460 L 820 520 L -20 520 Z" fill="#86efac" />
+      <path d="M90 90 C 110 70, 140 72, 152 90 C 175 86, 186 112, 166 120 L 82 120 C 62 118, 66 90, 90 90 Z" fill="#fff" stroke="#93c5fd" strokeWidth="3" className="os-cloud" />
+    </svg>
+  );
+}
+
+/** The time on the laptop's menu bar (the visitor's own clock). */
+function useClock() {
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const t = window.setInterval(() => setNow(new Date()), 30_000);
+    return () => window.clearInterval(t);
+  }, []);
+  return {
+    time: now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    date: now.toLocaleDateString([], { weekday: 'long', day: 'numeric', month: 'long' }),
+  };
+}
+
+/**
+ * The laptop's home screen: a menu bar, a doodled wallpaper and an app icon
+ * for each project. Click an icon and its window grows out of it.
+ */
+function Desktop() {
+  const [locked, setLocked] = useState(true);
+  const [app, setApp] = useState<ProductConcept | null>(null);
+  const [origin, setOrigin] = useState('50% 50%');
+  const screen = useRef<HTMLDivElement>(null);
+  const icons = useRef<Record<string, HTMLButtonElement | null>>({});
+  const clock = useClock();
+
+  const openApp = (p: ProductConcept, el: HTMLElement) => {
+    const s = screen.current?.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    if (s) setOrigin(`${r.left + r.width / 2 - s.left}px ${r.top + r.height / 2 - s.top}px`);
+    setApp(p);
+  };
+  const closeApp = () => {
+    const last = app;
+    setApp(null);
+    if (last) window.setTimeout(() => icons.current[last.id]?.focus({ preventScroll: true }), 0);
+  };
+
+  return (
+    <div ref={screen} className="os-screen">
+      <div className="os-menubar">
+        <span className="font-serif text-[15px] font-semibold">MR</span>
+        <span>Products</span>
+        <span className="ml-auto tabular-nums">{clock.time}</span>
+      </div>
+
+      <Wallpaper />
+
+      <ul className="os-icons" aria-label="Projects">
+        {productConcepts.map((p) => {
+          const a = APPS[p.id];
+          return (
+            <li key={p.id}>
+              <button
+                ref={(el) => {
+                  icons.current[p.id] = el;
+                }}
+                type="button"
+                onClick={(e) => openApp(p, e.currentTarget)}
+                aria-label={`Open ${p.title}`}
+                className="os-icon"
+              >
+                <span className="os-icon-tile" style={{ background: a?.colour ?? '#e5e7eb' }}>
+                  <svg viewBox="0 0 48 48" className="h-3/5 w-3/5" fill="none" stroke={a?.ink ?? '#111'} strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                    {a?.glyph}
+                  </svg>
+                </span>
+                <span className="os-icon-label">{a?.short ?? p.title}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+
+      <AnimatePresence>{app && <Window key={app.id} p={app} origin={origin} onClose={closeApp} />}</AnimatePresence>
+
+      {/* the lock screen: click and it slides up onto the desktop */}
+      <AnimatePresence>
+        {locked && (
+          <m.button
+            key="lock"
+            type="button"
+            onClick={() => setLocked(false)}
+            aria-label="Open the laptop to see my product concepts"
+            className="os-lock"
+            exit={{ y: '-100%' }}
+            transition={{ duration: 0.7, ease: [0.65, 0, 0.35, 1] }}
+          >
+            <span className="os-lock-wall" aria-hidden>
+              <Wallpaper />
+            </span>
+            <span className="os-lock-time tabular-nums">{clock.time}</span>
+            <span className="os-lock-date">{clock.date}</span>
+            <span className="os-lock-avatar" aria-hidden>
+              MR
+            </span>
+            <span className="os-lock-name">Manasa Rammohan</span>
+            <span className="os-lock-cta">
+              Click to open <span aria-hidden className="os-lock-arrow">↑</span>
+            </span>
+          </m.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-/** The selected project, live and usable inside its device. */
-function LiveStage({ p }: { p: ProductConcept }) {
-  const src = p.link ?? '';
-  if (p.screen.kind === 'phone') {
-    return (
-      <div className="phone-frame relative mx-auto w-[300px] max-w-full rounded-[46px] p-[5px]">
-        {/* side buttons */}
-        <span className="absolute -left-[3px] top-[18%] h-8 w-[3px] rounded-l bg-gray-700" />
-        <span className="absolute -left-[3px] top-[26%] h-12 w-[3px] rounded-l bg-gray-700" />
-        <span className="absolute -right-[3px] top-[22%] h-16 w-[3px] rounded-r bg-gray-700" />
-        <div className="relative rounded-[41px] overflow-hidden bg-white">
-          <ScaledFrame src={src} w={390} h={844} title={`${p.title} (live app)`} />
-          <span className="pointer-events-none absolute top-2.5 left-1/2 -translate-x-1/2 h-6 w-24 rounded-full bg-black" />
+/** The laptop: upright, its screen showing the lock screen, then the desktop. */
+function Laptop() {
+  return (
+    <div className="laptop mx-auto w-full max-w-[880px]">
+      <div className="laptop-lid">
+        <div className="laptop-screen">
+          <Desktop />
         </div>
       </div>
-    );
-  }
-  if (p.screen.kind === 'pdf') {
-    // The PDF's pages as plain images: one smooth scroll, no viewer chrome.
-    return (
-      <div className="h-[70vh] max-h-[680px] overflow-y-auto rounded-xl bg-gray-100 shadow-2xl ring-1 ring-black/5 p-3 sm:p-5 space-y-3 sm:space-y-5 overscroll-contain">
-        {Array.from({ length: PDF_PAGES }).map((_, i) => (
-          <Picture
-            key={i}
-            sizes="(min-width: 768px) 700px, 100vw"
-            src={`/images/pdf/blockchain-land-registry/page-${i + 1}.jpg`}
-            alt={`${p.title}, page ${i + 1}`}
-            loading="lazy"
-            className="block w-full rounded-md shadow"
-          />
-        ))}
-      </div>
-    );
-  }
-  return (
-    <div className="rounded-xl overflow-hidden shadow-2xl ring-1 ring-black/10 bg-white">
-      <div className="flex items-center gap-1.5 px-4 h-9 bg-gray-100 border-b border-gray-200">
-        <span className="h-2.5 w-2.5 rounded-full bg-red-400" />
-        <span className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
-        <span className="h-2.5 w-2.5 rounded-full bg-green-400" />
-        <span className="ml-3 flex-1 truncate rounded-md bg-white px-3 py-1 text-[11px] text-gray-500">{p.screen.label}</span>
-      </div>
-      <ScaledFrame src={src} w={1280} h={800} title={`${p.title} (live site)`} />
+      <div className="laptop-base" aria-hidden />
     </div>
   );
 }
 
 export default function ProductConcepts() {
-  const [current, setCurrent] = useState<ProductConcept>(productConcepts[0]);
-  const [info, setInfo] = useState<ProductConcept | null>(null);
-  const [critique, setCritique] = useState(false);
-  const ref = useScrollReveal<HTMLDivElement>();
-  // Picking another project turns the card back to the live view.
-  useEffect(() => setCritique(false), [current.id]);
-
   return (
-    <section
-      id="products"
-      data-section="products"
-      ref={ref}
-      className="relative overflow-x-clip py-12 sm:py-16 px-6 sm:px-10 max-w-5xl mx-auto"
-    >
-      {/* a snail making its slow way around the section */}
-      <Roamer
-        mode="crawl"
-        speed={160}
-        aspect={0.7}
-        className="z-20"
-        points={[
-          { x: 2, y: 2 }, { x: 98, y: 2 }, { x: 98, y: 98, hold: 4 }, { x: 50, y: 98 },
-          { x: 50, y: 22 }, { x: 2, y: 22 }, { x: 2, y: 98, hold: 4 }, { x: 2, y: 50 },
-        ]}
-      >
-        <Snail className="w-12 sm:w-14" />
-      </Roamer>
-
-      <div className="reveal relative mb-8">
-        <span className="text-[11px] tracking-[0.25em] uppercase text-cyan-600 font-medium">Innovation</span>
-        <h2 className="mt-5 text-4xl sm:text-6xl font-medium text-gray-900 tracking-tight">
-          Product Concepts & Prototypes
-        </h2>
-        <Scribble className="lg:right-0 lg:-bottom-4">these are live, click around!</Scribble>
-      </div>
-
-      {/* The selected project, live: click around, scroll, read. */}
-      <div className="reveal" data-lenis-prevent>
-        <FlipCard
-          flipped={critique}
-          front={<LiveStage key={current.id} p={current} />}
-          back={
-            <div className="sketch-box h-full rounded-[24px] bg-white shadow-xl ring-1 ring-black/5 p-7 sm:p-10">
-              <CritiqueBack critique={current.critique} title={current.title.split(':')[0]} onBack={() => setCritique(false)} ink="gray-900" />
-            </div>
-          }
-        />
-      </div>
-      <div className="reveal mt-4 flex flex-wrap items-center justify-center gap-3 text-[13px]">
-        <span className="text-gray-500">Live: {current.title.split(':')[0]}</span>
-        <button
-          onClick={() => setInfo(current)}
-          className="px-4 py-1.5 rounded-full border border-gray-300 text-gray-700 hover:border-gray-500"
-        >
-          About this project
-        </button>
-        <DevilButton
-          flipped={critique}
-          onClick={() => setCritique((v) => !v)}
-          label={current.title.split(':')[0]}
-          className="border-gray-300 text-gray-600"
-        />
-        {current.link && (
-          <a
-            href={current.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1 px-4 py-1.5 rounded-full bg-gray-900 text-white hover:bg-gray-700"
-          >
-            Open in new tab <ArrowUpRight className="h-3.5 w-3.5" />
-          </a>
-        )}
-      </div>
-
-      {/* Pick a project: only the devices are shown */}
-      <div className="reveal mt-10 grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {productConcepts.map((p) => {
-          const on = p.id === current.id;
-          return (
-            <button
-              key={p.id}
-              onClick={() => setCurrent(p)}
-              data-evidence={`product-${p.id}`}
-              aria-pressed={on}
-              aria-label={`Show ${p.title}`}
-              className={`group relative h-[150px] flex items-center justify-center rounded-2xl transition-all duration-300 ${
-                on ? 'bg-gray-100 ring-2 ring-gray-900' : 'hover:bg-gray-50'
-              }`}
-            >
-              <div className="h-full w-full flex items-center justify-center p-3 transition-transform duration-300 group-hover:-translate-y-1">
-                <Device p={p} />
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      <AnimatePresence>{info && <Tile key={info.id} p={info} onClose={() => setInfo(null)} />}</AnimatePresence>
+    <section id="products" data-section="products" className="relative overflow-x-clip py-16 sm:py-24 px-6 sm:px-10 max-w-5xl mx-auto">
+      <NaiveDoodle kind="daisy" className="right-0 top-[38%] w-10" />
+      <NaiveDoodle kind="star" className="left-0 bottom-[18%] w-9" delay={0.4} />
+      <SectionHead no="04" label="INNOVATION" title="Product Concepts & Prototypes" tone="light" scribble="unlock it, then open an app" />
+      <Laptop />
     </section>
   );
 }

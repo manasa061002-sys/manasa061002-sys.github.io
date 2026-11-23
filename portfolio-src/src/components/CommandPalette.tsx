@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { m, AnimatePresence } from 'motion/react';
-import { ArrowRight, Copy, Download, Search, CornerDownLeft } from 'lucide-react';
+import { ArrowRight, Copy, Search, CornerDownLeft } from 'lucide-react';
 import { scrollToId, sections, useScrollLock, useSite } from '@/lib/site';
 
 type Item = { id: string; label: string; hint: string; icon: JSX.Element; run: () => void };
 
 function Palette({ onClose }: { onClose: () => void }) {
-  const { copyEmail, downloadCv } = useSite();
+  const { copyEmail } = useSite();
   const [q, setQ] = useState('');
   const [sel, setSel] = useState(0);
   const input = useRef<HTMLInputElement>(null);
@@ -21,9 +21,8 @@ function Palette({ onClose }: { onClose: () => void }) {
         run: () => scrollToId(s.id),
       })),
       { id: 'copy', label: 'Copy email', hint: 'Action', icon: <Copy className="h-4 w-4" />, run: copyEmail },
-      { id: 'cv', label: 'Download CV', hint: 'Action', icon: <Download className="h-4 w-4" />, run: downloadCv },
     ],
-    [copyEmail, downloadCv],
+    [copyEmail],
   );
 
   const shown = items.filter((i) => i.label.toLowerCase().includes(q.trim().toLowerCase()));
@@ -75,7 +74,7 @@ function Palette({ onClose }: { onClose: () => void }) {
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center gap-3 px-4 border-b border-gray-100">
-          <Search className="h-4 w-4 text-gray-400" />
+          <Search className="h-4 w-4 text-gray-500" />
           <input
             ref={input}
             value={q}
@@ -83,12 +82,12 @@ function Palette({ onClose }: { onClose: () => void }) {
             onKeyDown={onKey}
             placeholder="Jump to a section or run an action…"
             aria-label="Search commands"
-            className="flex-1 py-4 text-[15px] text-gray-900 placeholder:text-gray-400 outline-none bg-transparent"
+            className="flex-1 py-4 text-[15px] text-gray-900 placeholder:text-gray-500 outline-none bg-transparent"
           />
-          <kbd className="text-[10px] text-gray-400 border border-gray-200 rounded px-1.5 py-0.5">Esc</kbd>
+          <kbd className="text-[12px] text-gray-500 border border-gray-200 rounded px-1.5 py-0.5">Esc</kbd>
         </div>
         <ul role="listbox" className="max-h-[50vh] overflow-y-auto py-2" data-lenis-prevent>
-          {shown.length === 0 && <li className="px-4 py-6 text-center text-[13px] text-gray-400">No matches.</li>}
+          {shown.length === 0 && <li className="px-4 py-6 text-center text-[13px] text-gray-500">No matches.</li>}
           {shown.map((item, i) => (
             <li key={item.id} role="option" aria-selected={i === sel}>
               <button
@@ -105,10 +104,10 @@ function Palette({ onClose }: { onClose: () => void }) {
                     transition={{ type: 'spring', stiffness: 500, damping: 40 }}
                   />
                 )}
-                <span className="relative text-gray-400">{item.icon}</span>
+                <span className="relative text-gray-500">{item.icon}</span>
                 <span className="relative flex-1">{item.label}</span>
-                <span className="relative text-[11px] text-gray-400">{item.hint}</span>
-                {i === sel && <CornerDownLeft className="relative h-3.5 w-3.5 text-gray-400" />}
+                <span className="relative text-[12px] text-gray-500">{item.hint}</span>
+                {i === sel && <CornerDownLeft className="relative h-3.5 w-3.5 text-gray-500" />}
               </button>
             </li>
           ))}

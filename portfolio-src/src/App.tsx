@@ -1,57 +1,24 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react';
+import { lazy, Suspense, useCallback } from 'react';
 import { LazyMotion, MotionConfig } from 'motion/react';
-import Landing from '@/components/Landing';
 
-// The front page (tic-tac-toe gate) is pre-rendered and loads first. The
-// portfolio itself is a separate chunk, fetched in the background meanwhile.
-const loadSite = () => import('./Site');
-const Site = lazy(loadSite);
+// The portfolio opens straight into the opening story (no gate in front of it).
+// Until the app has loaded, the page is the story's own blank black page.
+const Site = lazy(() => import('./Site'));
 const loadFeatures = () => import('./lib/motion-features').then((r) => r.default);
 
-const HASH = '#portfolio';
-
 export default function App() {
-  // Always false on the first render so it matches the pre-rendered HTML.
-  const [unlocked, setUnlocked] = useState(false);
-
-  useEffect(() => {
-    const sync = () => setUnlocked(window.location.hash === HASH);
-    sync();
-    window.addEventListener('hashchange', sync);
-    // Warm up the portfolio chunk as soon as there is a real visitor on the
-    // front page (not during page load, so it never slows the first paint).
-    const evs = ['pointermove', 'pointerdown', 'touchstart', 'keydown'];
-    const warm = () => {
-      evs.forEach((e) => window.removeEventListener(e, warm));
-      loadSite();
-    };
-    evs.forEach((e) => window.addEventListener(e, warm, { once: true, passive: true }));
-    return () => {
-      window.removeEventListener('hashchange', sync);
-      evs.forEach((e) => window.removeEventListener(e, warm));
-    };
-  }, []);
-
-  const unlock = useCallback(() => {
-    window.location.hash = HASH;
-  }, []);
-
-  const returnHome = useCallback(() => {
-    history.pushState('', '', window.location.pathname + window.location.search);
-    setUnlocked(false);
+  // The home icon in the nav plays the opening story again (it plays on every load).
+  const replayStory = useCallback(() => {
     window.scrollTo(0, 0);
+    window.location.reload();
   }, []);
 
   return (
     <LazyMotion features={loadFeatures} strict>
       <MotionConfig reducedMotion="user">
-        {unlocked ? (
-          <Suspense fallback={<div className="min-h-screen bg-black" />}>
-            <Site onHome={returnHome} />
-          </Suspense>
-        ) : (
-          <Landing onUnlock={unlock} />
-        )}
+        <Suspense fallback={<div className="min-h-screen bg-black" />}>
+          <Site onHome={replayStory} />
+        </Suspense>
       </MotionConfig>
     </LazyMotion>
   );

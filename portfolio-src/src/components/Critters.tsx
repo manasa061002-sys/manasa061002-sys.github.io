@@ -214,61 +214,15 @@ export function GlassesOwl({ className = '', tone = 'dark' }: { className?: stri
         <circle cx="49" cy="34" r="8.5" strokeWidth={2.6} />
         <path d="M39.5 33 Q 40 31.5, 40.5 33 M22.5 33 L19 30.5 M57.5 33 L61 30.5" fill="none" strokeWidth={2.2} />
         <g className="owl-blink" style={{ transformBox: 'view-box', transformOrigin: '40px 35px' }}>
-          <circle cx="32" cy="35" r="3" fill={ink} stroke="none" />
-          <circle cx="50" cy="35" r="3" fill={ink} stroke="none" />
+          {/* pupils: follow the pointer when a parent sets --eye-x / --eye-y */}
+          <g className="owl-eyes">
+            <circle cx="32" cy="35" r="3" fill={ink} stroke="none" />
+            <circle cx="50" cy="35" r="3" fill={ink} stroke="none" />
+          </g>
         </g>
         {/* beak + feet */}
         <path d="M37.5 43 L40 48.5 L42.5 43 Z" />
         <path d="M34 68 l-2 5 M36.5 68 l0 5 M43.5 68 l0 5 M46 68 l2 5" fill="none" strokeWidth={1.6} />
-      </g>
-    </svg>
-  );
-}
-
-/**
- * An elephant that lifts its trunk and sprays an arc of water. Faces right.
- * `spray="tall"` sends the water in a high arc (over a big headline).
- */
-export function Elephant({ className = '', tone = 'dark', spray = 'arc' }: { className?: string; tone?: ToneName; spray?: 'arc' | 'tall' }) {
-  const { ink, paper } = TONE[tone];
-  return (
-    <svg viewBox="0 0 160 110" className={`overflow-visible ${tone === 'dark' ? 'ink-flip' : ''} ${className}`} aria-hidden>
-      <g stroke={ink} strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round">
-        {/* water spray: a fan of five streams of big drops, up and to the right,
-            each drop splashing out where it lands */}
-        {[0, 1, 2, 3, 4].map((s) =>
-          Array.from({ length: 18 }).map((_, i) => (
-            <circle
-              key={`${s}-${i}`}
-              className={`spray-drop spray-${spray}-${s}`}
-              r={6 + ((i * 7 + s * 3) % 5) * 1.7}
-              fill={i % 4 === 0 ? '#ffffff' : tone === 'dark' ? '#bae6fd' : '#38bdf8'}
-              fillOpacity={0.75 + (i % 3) * 0.1}
-              stroke="none"
-              style={{ animationDelay: `${i * 0.05 + s * 0.035}s` }}
-            />
-          )),
-        )}
-        {/* tail */}
-        <path className="cat-tail" d="M19 58 C 11 62, 9 70, 11 76" fill="none" style={{ transformBox: 'view-box', transformOrigin: '19px 58px' }} />
-        {/* legs */}
-        <path d="M30 80 L30 104 L42 104 L42 84 M70 84 L70 104 L82 104 L82 80" fill={paper} />
-        {/* body */}
-        <path d="M18 60 C 18 34, 48 26, 72 30 C 92 32, 100 50, 96 66 C 92 84, 30 90, 20 76 Z" fill={paper} />
-        <path d="M33 101 L33 104 M37 101 L37 104 M73 101 L73 104 M77 101 L77 104" fill="none" strokeWidth={1.4} />
-        {/* head */}
-        <circle cx="100" cy="44" r="20" fill={paper} />
-        {/* big ear */}
-        <path d="M88 30 C 70 30, 70 62, 88 64 C 94 56, 94 38, 88 30 Z" fill={paper} />
-        <path d="M84 38 C 78 42, 78 52, 84 56" fill="none" strokeWidth={1.4} />
-        <circle cx="106" cy="40" r="2.2" fill={ink} stroke="none" />
-        {/* trunk, raised to spray (an outlined tube) */}
-        <g className="elephant-trunk" style={{ transformBox: 'view-box', transformOrigin: '116px 52px' }}>
-          <path d="M116 52 C 128 54, 132 40, 128 28 C 126 22, 132 18, 136 22" fill="none" strokeWidth={10} />
-          <path d="M116 52 C 128 54, 132 40, 128 28 C 126 22, 132 18, 136 22" fill="none" stroke={paper} strokeWidth={5.6} />
-        </g>
-        {/* tusk */}
-        <path d="M112 58 C 118 64, 124 62, 126 58" fill={paper} strokeWidth={1.6} />
       </g>
     </svg>
   );

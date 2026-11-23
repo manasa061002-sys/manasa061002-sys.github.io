@@ -2,26 +2,23 @@ import defaults from 'tailwindcss/colors';
 import plugin from 'tailwindcss/plugin';
 
 /**
- * Analyst / Artist mode.
+ * One page, two halves.
  *
  * Every colour class the site uses (white, black, gray-*, and the accent
- * palettes) reads a CSS variable instead of a fixed value. The page is split
- * into zones: `.zone-dark` (the black top half) and `.zone-light` (Products
- * onwards). `data-mode` on <html> re-maps the variables per zone:
+ * palettes) reads a CSS variable instead of a fixed value, and the page is
+ * split into zones:
  *
- * - analyst: the light zone is flipped to the same monochrome dark as the top
- *   half (white becomes near-black, grays and accents become inverted grays).
- * - artist:  both zones become ink on paper (warm stone grays), with the
- *   colourful accents of "The other side".
+ * - `.zone-dark` (the professional top half, up to Research): the original
+ *   palette, white on black.
+ * - `.zone-light` (Products onwards, after "Where structure meets color"):
+ *   ink on paper, with warm stone greys and the colourful accents.
  *
  * `.zone-keep` puts the original palette back (used for the creative desk,
- * which is a physical object and looks the same in both modes).
- * Outside any zone (front page, palette, toasts) nothing changes.
+ * which is a physical object, and for overlays that must stay black and white).
  */
 
 const PALETTES = ['gray', 'pink', 'cyan', 'violet', 'amber', 'yellow', 'emerald', 'green', 'red'];
 const SHADES = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950];
-const MIRROR = Object.fromEntries(SHADES.map((s, i) => [s, SHADES[SHADES.length - 1 - i]]));
 
 const rgb = (hex) => {
   const h = hex.replace('#', '');
@@ -46,22 +43,13 @@ const original = () => {
   return out;
 };
 
-/** Analyst, light zone: everything becomes the mirrored neutral gray (monochrome dark). */
-const analystLight = () => {
-  const out = { '--c-white': '17 17 17', '--c-black': '255 255 255' };
-  for (const p of PALETTES) for (const s of SHADES) out[`--c-${p}-${s}`] = rgb(defaults.neutral[MIRROR[s]]);
-  return out;
-};
-
 const INK = '28 25 23'; // stone-900, warm ink
-const PAPER = '250 246 236';
 const CARD = '255 253 247';
 
-/** Artist: ink on paper. In the dark zone white/black swap and grays mirror. */
-const artist = (zone) => {
-  const out =
-    zone === 'dark' ? { '--c-white': INK, '--c-black': PAPER } : { '--c-white': CARD, '--c-black': INK };
-  for (const s of SHADES) out[`--c-gray-${s}`] = rgb(defaults.stone[zone === 'dark' ? MIRROR[s] : s]);
+/** The light half: ink on paper, greys from the warm stone scale. */
+const paper = () => {
+  const out = { '--c-white': CARD, '--c-black': INK };
+  for (const s of SHADES) out[`--c-gray-${s}`] = rgb(defaults.stone[s]);
   return out;
 };
 
@@ -77,10 +65,8 @@ export default {
     plugin(({ addBase }) => {
       addBase({
         ':root, .zone-keep': original(),
-        'html[data-mode="analyst"] .zone-light': analystLight(),
-        'html[data-mode="artist"] .zone-dark': artist('dark'),
-        'html[data-mode="artist"] .zone-light': artist('light'),
-        'html[data-mode="artist"] .zone-keep, html[data-mode="analyst"] .zone-keep': original(),
+        '.zone-light': paper(),
+        '.zone-light .zone-keep': original(),
       });
     }),
   ],

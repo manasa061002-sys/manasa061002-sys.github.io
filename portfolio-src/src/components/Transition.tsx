@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { ArrowDown } from 'lucide-react';
-import { useSite } from '@/lib/site';
+import { PAPER_EVENT } from '@/lib/site';
 
 const BANDS = [
   '#ec4899', '#f0609f', '#f59e0b', '#facc15', '#a3e635', '#22d3ee',
@@ -8,30 +8,26 @@ const BANDS = [
 ];
 const ROWS = 6;
 // How far the section stays pinned, in viewport heights.
-const PIN_VH = 130;
+const PIN_VH = 80;
 // Space between the arrow under the headline and the top of Product Concepts.
 const GAP_PX = 10;
-// The arrow under the button: mt-8 (32px) + h-5 (20px).
-const ARROW_PX = 52;
 
 /**
- * The bridge between the black professional half and the white "other side".
- * As it scrolls into view the grid draws itself in and colour starts to bleed
- * through the columns, so there is never a blank screen. Then it pins (GSAP
- * ScrollTrigger) while you scroll: the columns widen into colour bands, the
- * bands lift off the headline, which turns rainbow. It now invites you to try
- * the Analyst / Artist switch in the nav (with a button to flip it here too).
- * Colours come from the theme, so it works on black (Analyst) and paper (Artist).
+ * The hinge of the page: the black professional half turns into the paper
+ * creative half. As it scrolls into view the grid draws itself in and colour
+ * starts to bleed through the columns. Then it pins (GSAP ScrollTrigger)
+ * while you scroll: the columns widen into colour bands, paper sweeps up from
+ * the bottom over them, and the headline turns rainbow ink on paper. Product
+ * Concepts (also on paper) follows straight on.
  * The section ends early (a measured negative margin), so Product Concepts slides up
  * under the headline while it is still pinned instead of after a blank half
- * screen. That bottom part of the stage is empty, so nothing is hidden.
+ * screen. That bottom part of the stage is plain paper by then, so nothing is hidden.
  *
  * The section reserves its full scroll height in CSS (pinSpacing: false), and
  * the start state is plain CSS, so GSAP can load lazily without layout jumps.
+ * With reduced motion it is simply paper with a colour edge on top.
  */
 export default function Transition() {
-  const { mode, switchMode } = useSite();
-  const other = mode === 'analyst' ? 'artist' : 'analyst';
   const root = useRef<HTMLElement>(null);
   const stage = useRef<HTMLDivElement>(null);
 
@@ -65,28 +61,29 @@ export default function Transition() {
           .fromTo(q('[data-fill]'), { scaleX: 0 }, { scaleX: 0.14, duration: 0.45, stagger: { each: 0.03, from: 'center' } }, 0.45)
           .fromTo(q('[data-t-kicker]'), { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.3 }, 0.6);
 
-        const tl = gsap.timeline({
-          defaults: { ease: 'none' },
-          scrollTrigger: {
-            trigger: el,
-            start: 'top top',
-            end: `+=${PIN_VH}%`,
-            pin: st,
-            pinSpacing: false,
-            scrub: 0.6,
-          },
-        });
-
-        tl.to(q('[data-row]'), { opacity: 0, duration: 0.25 }, 0)
+        gsap
+          .timeline({
+            defaults: { ease: 'none' },
+            scrollTrigger: {
+              trigger: el,
+              start: 'top top',
+              end: `+=${PIN_VH}%`,
+              pin: st,
+              pinSpacing: false,
+              scrub: 0.6,
+              // Tell the doodle guide once the paper covers the screen, so she switches to ink.
+              onUpdate: (self) => window.dispatchEvent(new CustomEvent(PAPER_EVENT, { detail: self.progress > 0.62 })),
+            },
+          })
+          .to(q('[data-row]'), { opacity: 0, duration: 0.2 }, 0)
           .to(q('[data-line]'), { opacity: 0, duration: 0.2 }, 0.05)
-          .to(q('[data-fill]'), { scaleX: 1, duration: 0.4, stagger: { each: 0.02, from: 'center' } }, 0.02)
-          .fromTo(q('[data-t-line1]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2 }, 0.2)
-          .fromTo(q('[data-t-line2]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.2 }, 0.28)
-          .to(q('[data-fill]'), { scaleY: 0, duration: 0.22, stagger: { each: 0.01, from: 'edges' } }, 0.56)
-          // The lettering turns rainbow once the colour bands have lifted away.
-          .to(q('[data-t-text]'), { '--fill-a': 0, duration: 0.18 }, 0.7)
-          .to(q('[data-t-arrow]'), { opacity: 0, duration: 0.1 }, 0.85);
-
+          .to(q('[data-fill]'), { scaleX: 1, duration: 0.35, stagger: { each: 0.02, from: 'center' } }, 0.02)
+          .fromTo(q('[data-t-line1]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.18 }, 0.18)
+          .fromTo(q('[data-t-line2]'), { opacity: 0, y: 40 }, { opacity: 1, y: 0, duration: 0.18 }, 0.26)
+          // paper sweeps up over the colour bands
+          .to(q('[data-paper]'), { scaleY: 1, duration: 0.3, ease: 'power1.inOut' }, 0.48)
+          // the lettering turns rainbow, the arrow turns to ink
+          .to(q('[data-t-text]'), { '--fill-a': 0, color: '#1c1917', duration: 0.18 }, 0.62);
       });
 
       revert = () => mm.revert();
@@ -102,14 +99,14 @@ export default function Transition() {
     // however much empty stage is left below the headline block.
     const rm = window.matchMedia('(prefers-reduced-motion: reduce)');
     const fit = () => {
-      // Measured from the button (the arrow under it bounces): offsets ignore
-      // transforms, so the pin and the bounce never skew the number.
-      const btn = st.querySelector<HTMLElement>('[data-t-button]');
-      if (rm.matches || !btn) {
+      // Measured from the arrow's box (offsets ignore transforms, so the pin
+      // and the bounce never skew the number).
+      const arrow = st.querySelector<HTMLElement>('[data-t-arrow]');
+      if (rm.matches || !arrow) {
         el.style.marginBottom = '';
         return;
       }
-      const below = st.clientHeight - (btn.offsetTop + btn.offsetHeight + ARROW_PX);
+      const below = st.clientHeight - (arrow.offsetTop + arrow.offsetHeight);
       const next = `${-Math.max(0, Math.round(below - GAP_PX))}px`;
       if (el.style.marginBottom !== next) {
         el.style.marginBottom = next;
@@ -135,16 +132,7 @@ export default function Transition() {
       className="relative motion-reduce:!h-[70vh]"
       style={{ height: `${100 + PIN_VH}vh` }}
     >
-      <div ref={stage} className="relative h-screen overflow-hidden motion-reduce:h-[70vh] bg-black">
-        {/* Static fallback for reduced motion */}
-        <div
-          className="hidden motion-reduce:block absolute inset-0"
-          style={{
-            background:
-              'linear-gradient(to bottom, rgb(var(--c-black)) 0%, #ec4899 35%, #facc15 50%, #06b6d4 65%, #a855f7 80%, rgb(var(--c-black)) 100%)',
-          }}
-        />
-
+      <div ref={stage} className="transition-stage relative h-screen overflow-hidden motion-reduce:h-[70vh] bg-black">
         {/* Grid lines → colour bands */}
         <div className="absolute inset-0 flex motion-reduce:hidden" aria-hidden>
           {BANDS.map((c) => (
@@ -163,30 +151,29 @@ export default function Transition() {
             <div key={i} data-row className="h-px w-full bg-white/[0.08]" />
           ))}
         </div>
+        {/* the paper of the creative half, sweeping up from the bottom */}
+        <div
+          data-paper
+          aria-hidden
+          className="absolute inset-0 motion-reduce:hidden"
+          style={{ background: 'rgb(var(--paper))', transform: 'scaleY(0)', transformOrigin: '50% 100%' }}
+        />
 
         <div
           className="transition-text relative z-10 h-full flex flex-col items-center justify-center px-6 text-white"
           style={{ ['--fill-a' as string]: 1 }}
           data-t-text
         >
-          <p data-t-kicker className="rainbow-text text-[11px] tracking-[0.3em] uppercase opacity-80 mb-6">
+          <p data-t-kicker className="rainbow-text text-[12px] tracking-[0.3em] uppercase opacity-80 mb-6">
             The other side
           </p>
           <h2 className="text-5xl sm:text-7xl font-medium text-center leading-[1.02] tracking-tight">
             <span data-t-line1 className="rainbow-text block pb-1">Where structure</span>
             <span data-t-line2 className="rainbow-text block italic pb-2 pr-2">meets color</span>
           </h2>
-          {/* The invitation to try the mode switch in the nav. */}
-          <p className="mt-8 font-serif italic text-xl sm:text-2xl text-center text-white/80">Flip the switch up top.</p>
-          <button
-            type="button"
-            data-t-button
-            onClick={(e) => switchMode(other, { x: e.clientX, y: e.clientY })}
-            className="mt-4 rounded-full border border-white/30 px-5 py-2 text-[13px] text-white/80 hover:text-white hover:border-white/60 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
-          >
-            {other === 'artist' ? 'Or try Artist mode right here' : 'Or go back to Analyst mode'}
-          </button>
-          <ArrowDown data-t-arrow className="mt-8 h-5 w-5 opacity-60 motion-safe:animate-bounce" />
+          <span data-t-arrow className="mt-8 block h-5 w-5">
+            <ArrowDown className="h-5 w-5 opacity-60 motion-safe:animate-bounce" aria-hidden />
+          </span>
         </div>
       </div>
     </section>

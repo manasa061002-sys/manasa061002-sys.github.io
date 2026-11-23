@@ -8,7 +8,6 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import { flushSync } from 'react-dom';
 import { m, AnimatePresence, useReducedMotion } from 'motion/react';
 import type Lenis from 'lenis';
 import { profile } from '@/data/portfolio';
@@ -59,30 +58,27 @@ export const sections = [
   { id: 'life', label: 'Life' },
 ];
 
+/** Which half of the page is on screen: the dark professional half, or the paper creative half. */
 export type Mode = 'analyst' | 'artist';
-const MODE_KEY = 'mr-mode';
 
-/** The saved mode (also applied to <html> by the inline script in index.html before first paint). */
-function readMode(): Mode {
-  try {
-    return localStorage.getItem(MODE_KEY) === 'artist' ? 'artist' : 'analyst';
-  } catch {
-    return 'analyst';
-  }
-}
+/** Sections on the paper half (after "Where structure meets color"). The creative desk is a dark mat, so it counts as dark. */
+const LIGHT_SECTIONS = new Set(['products', 'skills', 'life', 'footer']);
 
-type ViewTransitionDoc = Document & { startViewTransition?: (cb: () => void) => { ready: Promise<void> } };
+/** Sent by the bridge section (detail: true once its paper covers the screen). */
+export const PAPER_EVENT = 'mr-paper';
 
 type SiteState = {
-  /** True when the page is ink on paper (Artist mode); used for nav and guide colours. */
+  /** True while the visitor is on the paper half; the doodle guide draws in ink then. */
   light: boolean;
+  /** The half on screen, as the guide's outfit: a blazer for the analyst, overalls for the artist. */
   mode: Mode;
-  /** Switch mode; `from` is the point the colour wipe grows out of (the toggle). */
-  switchMode: (next: Mode, from?: { x: number; y: number }) => void;
   active: string;
+  /** False while the opening story plays (the nav and the guide wait for it). */
+  introDone: boolean;
+  /** End the opening story (it finished, or the visitor skipped it). */
+  finishIntro: () => void;
   toast: (msg: string) => void;
   copyEmail: () => void;
-  downloadCv: () => void;
   paletteOpen: boolean;
   setPaletteOpen: (v: boolean) => void;
   sectionsMounted: () => void;
@@ -98,9 +94,25 @@ export function useSite() {
 
 export function SiteProvider({ children }: { children: ReactNode }) {
   const reduced = useReducedMotion();
-  const [mode, setMode] = useState<Mode>(readMode);
-  const light = mode === 'artist';
   const [active, setActive] = useState('intro');
+  // The opening story plays every time the site opens (never with reduced motion).
+  const [introDone, setIntroDone] = useState(() => {
+    try {
+      return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    } catch {
+      return false;
+    }
+  });
+  const finishIntro = useCallback(() => setIntroDone(true), []);
+  // On the bridge the page turns to paper part-way through (or is paper outright with reduced motion).
+  const [bridgePaper, setBridgePaper] = useState(false);
+  useEffect(() => {
+    const on = (e: Event) => setBridgePaper((e as CustomEvent<boolean>).detail);
+    window.addEventListener(PAPER_EVENT, on);
+    return () => window.removeEventListener(PAPER_EVENT, on);
+  }, []);
+  const light = LIGHT_SECTIONS.has(active) || (active === 'transition' && (bridgePaper || !!reduced));
+  const mode: Mode = light ? 'artist' : 'analyst';
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
   const toastTimer = useRef<number>();
@@ -162,45 +174,6 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     return () => io.disconnect();
   }, [sectionsKey]);
 
-  // Keep <html data-mode> in step (the inline script set it before paint).
-  useEffect(() => {
-    document.documentElement.dataset.mode = mode;
-  }, [mode]);
-
-  const switchMode = useCallback(
-    (next: Mode, from?: { x: number; y: number }) => {
-      try {
-        localStorage.setItem(MODE_KEY, next);
-      } catch {
-        /* private mode etc.: the choice just won't be remembered */
-      }
-      const apply = () => {
-        document.documentElement.dataset.mode = next;
-        flushSync(() => setMode(next));
-      };
-      const doc = document as ViewTransitionDoc;
-      if (reduced || !doc.startViewTransition) {
-        // No View Transitions (or reduced motion): switch at once; colours
-        // ease over via the CSS transition on the zones.
-        apply();
-        return;
-      }
-      const x = from?.x ?? window.innerWidth - 40;
-      const y = from?.y ?? 32;
-      const r = Math.hypot(Math.max(x, window.innerWidth - x), Math.max(y, window.innerHeight - y));
-      const vt = doc.startViewTransition(apply);
-      vt.ready
-        .then(() => {
-          document.documentElement.animate(
-            { clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] },
-            { duration: 700, easing: 'cubic-bezier(0.65, 0, 0.35, 1)', pseudoElement: '::view-transition-new(root)' },
-          );
-        })
-        .catch(() => {});
-    },
-    [reduced],
-  );
-
   const toast = useCallback((msg: string) => {
     setToastMsg(msg);
     window.clearTimeout(toastTimer.current);
@@ -216,29 +189,20 @@ export function SiteProvider({ children }: { children: ReactNode }) {
     }
   }, [toast]);
 
-  const downloadCv = useCallback(() => {
-    const a = document.createElement('a');
-    a.href = profile.cv;
-    a.download = profile.cv.split('/').pop() || 'CV.pdf';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }, []);
-
   const value = useMemo(
     () => ({
       light,
       mode,
-      switchMode,
       active,
+      introDone,
+      finishIntro,
       toast,
       copyEmail,
-      downloadCv,
       paletteOpen,
       setPaletteOpen,
       sectionsMounted,
     }),
-    [light, mode, switchMode, active, toast, copyEmail, downloadCv, paletteOpen, sectionsMounted],
+    [light, mode, active, introDone, finishIntro, toast, copyEmail, paletteOpen, sectionsMounted],
   );
 
   return (

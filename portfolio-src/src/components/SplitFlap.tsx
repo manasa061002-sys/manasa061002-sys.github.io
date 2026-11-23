@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
  * A split-flap departure board (like a Swiss station or an old trading floor).
  * Each cell clicks through the alphabet until it reaches its letter. Changing
  * `text` makes the cells flip again to the new word. Colours come from the
- * theme, so the board is dark in Analyst mode and paper in Artist mode.
+ * zone, so the board is dark on the black half and ink on the paper half.
  * With `instant` (reduced motion) the final text is shown straight away.
  */
 

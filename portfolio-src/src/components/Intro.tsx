@@ -1,131 +1,276 @@
-import { useEffect, useState } from 'react';
-import { Volume2, VolumeX } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
+import { m, type Easing } from 'motion/react';
 import { profile } from '@/data/portfolio';
-import Roamer from '@/components/Roamer';
-import SplitFlap, { flapClick, primeFlapSound } from '@/components/SplitFlap';
 import { useReducedMotionSafe } from '@/lib/useReducedMotionSafe';
-import { Bird, Elephant, GlassesOwl, Monkey, WalkingCat } from '@/components/Critters';
+import { useScrollLock, useSite } from '@/lib/site';
+import IntroStory from '@/components/IntroStory';
 
-/** Roughly when the name has finished flipping into place. */
-const NAME_SETTLES_MS = 2300;
-const ROLE_EVERY_MS = 3200;
+/** How far (in px) the pointer's pull on a tile reaches. */
+const REACH = 150;
+/** How often the board switches between its white and its colourful letters. */
+const FLIP_EVERY_MS = 5000;
 
 /**
- * The welcome screen shown right after the front page: the name arrives on a
- * split-flap departure board, then the line underneath keeps flipping through
- * roles. The animals perch on the board and stand on the line under it, and
- * now and then the elephant sprays the board. Flap sound is off by default.
+ * Each letter's colour on the colourful side of the board: a bright fill and a
+ * second colour for its offset edge, in the spirit of a hand-drawn alphabet.
+ */
+const LETTER_COLOURS: Record<string, { fill: string; edge: string }> = {
+  M: { fill: '#9b2fd4', edge: '#ff5ec4' },
+  A: { fill: '#e6f23b', edge: '#7cc94a' },
+  N: { fill: '#ffcf5c', edge: '#2fd0c4' },
+  S: { fill: '#ffd166', edge: '#ff5e8a' },
+  R: { fill: '#7b22b8', edge: '#4f6bff' },
+  O: { fill: '#4fc3f7', edge: '#3d5afe' },
+  H: { fill: '#55c8f5', edge: '#ff4f9a' },
+};
+
+/** The letters a tile rattles through, and how fast: the same as the section labels. */
+const FLAP_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+const STEP_MS = 42;
+
+/**
+ * One tile of the name board. Each time the board switches between white and
+ * colourful letters, the tile clacks quickly through a run of letters (like a
+ * departure board) and lands on its own letter in the new style. Tiles start
+ * one after another along the name.
+ */
+function FlapTile({ ch, colourful, index, fill, edge }: { ch: string; colourful: boolean; index: number; fill: string; edge: string }) {
+  const [shown, setShown] = useState(ch);
+  const [step, setStep] = useState(0);
+  // rattle only when the style really changes (not on the first paint)
+  const prev = useRef(colourful);
+  useEffect(() => {
+    if (prev.current === colourful) return;
+    prev.current = colourful;
+    const steps = 9 + (index % 5);
+    const from = (FLAP_CHARS.indexOf(ch) + 5 + index * 3) % FLAP_CHARS.length;
+    let k = 0;
+    let timer = 0;
+    const tick = () => {
+      k += 1;
+      setStep((x) => x + 1);
+      if (k >= steps) {
+        setShown(ch);
+        return;
+      }
+      setShown(FLAP_CHARS[(from + k) % FLAP_CHARS.length]);
+      timer = window.setTimeout(tick, STEP_MS);
+    };
+    timer = window.setTimeout(tick, index * 70);
+    return () => window.clearTimeout(timer);
+  }, [colourful, ch, index]);
+  return (
+    <span className={`nflap ${colourful ? 'is-colourful' : ''}`} style={{ ['--fill' as string]: fill, ['--edge' as string]: edge } as CSSProperties}>
+      <span key={step} className={`nflap-char ${step ? 'flap-anim' : ''}`}>
+        {shown}
+      </span>
+    </span>
+  );
+}
+
+/** When each keyframe of a tile's jumps falls: take-off, peak, land, small peak, land, settle. */
+const HOP_TIMES = [0, 0.32, 0.62, 0.76, 0.9, 1];
+const UP: Easing = [0.25, 0.55, 0.45, 1]; // easing off as it rises
+const DOWN: Easing = [0.55, 0, 0.75, 0.45]; // gathering speed as it falls
+const HOP_EASE: Easing[] = [UP, DOWN, UP, DOWN, 'easeOut'];
+/** How long each tile's jump takes, and the gap between one tile and the next (s). */
+const HOP_S = 1.2;
+const HOP_GAP_S = 0.09;
+
+/** A repeatable pseudo-random number per letter, so the dance is the same each render. */
+const rand = (i: number, k: number) => {
+  const x = Math.sin(i * 12.9898 + k * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+};
+
+/**
+ * The welcome screen. The opening story (IntroStory) plays first; at its POP
+ * the name's tiles jump around the screen and land on a split-flap board,
+ * which then flips, tile by tile, between white letters and colourful ones.
+ * The tiles rise as the pointer passes and squash when clicked.
  */
 export default function Intro() {
-  const [first, ...rest] = profile.name.split(' ');
+  const [first, ...rest] = profile.name.toUpperCase().split(' ');
   const last = rest.join(' ');
-  const roles = profile.flapRoles;
-  const roleCells = Math.max(...roles.map((r) => r.length));
   const reduced = useReducedMotionSafe();
-  const [role, setRole] = useState(0);
-  const [rolling, setRolling] = useState(false);
-  const [sound, setSound] = useState(false);
+  const { introDone, finishIntro } = useSite();
+  // story: the story is playing; dance: the tiles dance in; drop: no story (reduced motion); still: skipped
+  const [phase, setPhase] = useState<'story' | 'dance' | 'drop' | 'still'>(introDone ? 'drop' : 'story');
+  const [colourful, setColourful] = useState(false);
+  useScrollLock(!introDone);
 
-  // After the name settles, flip through the roles (not with reduced motion).
+  const letters = useRef<HTMLSpanElement[]>([]);
+  const frame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
+
+  // Once the name has landed, the board keeps flipping between its two sides.
+  // After the story the letters dance in colourful, so the first flip is to white.
   useEffect(() => {
-    if (reduced) return;
+    if (reduced || phase === 'story') return;
     let every = 0;
-    const start = window.setTimeout(() => {
-      setRolling(true);
-      every = window.setInterval(() => setRole((r) => (r + 1) % roles.length), ROLE_EVERY_MS);
-    }, NAME_SETTLES_MS);
+    const flip = () => setColourful((c) => !c);
+    const start = window.setTimeout(
+      () => {
+        flip();
+        every = window.setInterval(flip, FLIP_EVERY_MS);
+      },
+      // dance: about 2.5s of jumping, then a few seconds to enjoy the colours
+      phase === 'dance' ? 2500 + 3500 : 2200,
+    );
     return () => {
       window.clearTimeout(start);
       window.clearInterval(every);
     };
-  }, [reduced, roles.length]);
+  }, [phase, reduced]);
 
-  const toggleSound = () => {
-    if (!sound) primeFlapSound();
-    setSound((s) => !s);
+  // How each tile jumps home, calmly: one easy hop from a spot not far off,
+  // then a little bounce on its tile, with a soft squash on each landing.
+  // Values are in px from the tile's own place.
+  const dance = useMemo(() => {
+    const w = typeof window === 'undefined' ? 1200 : window.innerWidth;
+    const h = typeof window === 'undefined' ? 800 : window.innerHeight;
+    return [...(first + last)].map((_, i) => {
+      const gx = (rand(i, 0) - 0.5) * Math.min(w * 0.4, 520);
+      const gy = (rand(i, 7) - 0.2) * Math.min(h * 0.22, 180);
+      const lift = Math.min(h * 0.16, 130) * (0.8 + rand(i, 4) * 0.4);
+      const tilt = (rand(i, 3) - 0.5) * 24;
+      return {
+        // take-off, peak, land, small peak, land, settle
+        x: [gx, gx / 2, 0, 0, 0, 0],
+        y: [gy, Math.min(gy, 0) - lift, 0, -lift * 0.22, 0, 0],
+        rotate: [tilt, -tilt / 3, 0, 0, 0, 0],
+        scaleX: [0.85, 0.97, 1.1, 0.99, 1.04, 1],
+        scaleY: [0.85, 1.04, 0.9, 1.02, 0.97, 1],
+      };
+    });
+  }, [first, last]);
+
+  /** Tiles near the pointer rise. */
+  const onPointerMove = (e: PointerEvent<HTMLElement>) => {
+    if (reduced || phase === 'story') return;
+    const { clientX: x, clientY: y } = e;
+    cancelAnimationFrame(frame.current);
+    frame.current = requestAnimationFrame(() => {
+      for (const el of letters.current) {
+        if (!el) continue;
+        const r = el.getBoundingClientRect();
+        const d = Math.hypot(x - (r.left + r.width / 2), y - (r.top + r.height / 2));
+        const lift = d < REACH ? Math.cos(((d / REACH) * Math.PI) / 2) ** 2 : 0;
+        el.style.setProperty('--lift', lift.toFixed(3));
+      }
+    });
   };
-  const onStep = sound ? flapClick : undefined;
+  const onPointerLeave = () => {
+    cancelAnimationFrame(frame.current);
+    for (const el of letters.current) el?.style.setProperty('--lift', '0');
+  };
+
+  /** A clicked (or tapped) tile squashes and springs back. */
+  const squash = (el: HTMLElement) => {
+    if (reduced) return;
+    el.classList.remove('is-squashed');
+    void el.offsetWidth;
+    el.classList.add('is-squashed');
+  };
+
+  let n = 0;
+  const row = (text: string) =>
+    [...text].map((ch, i) => {
+      const idx = n++;
+      const c = LETTER_COLOURS[ch] ?? { fill: '#fde047', edge: '#22c55e' };
+      const tile = (
+        <span
+          className="name-lift"
+          ref={(el) => {
+            if (el) letters.current[idx] = el;
+          }}
+        >
+          <span
+            className="name-squash"
+            onPointerDown={(e) => squash(e.currentTarget)}
+            onAnimationEnd={(e) => e.currentTarget.classList.remove('is-squashed')}
+          >
+            <FlapTile ch={ch} colourful={colourful && !reduced} index={idx} fill={c.fill} edge={c.edge} />
+          </span>
+        </span>
+      );
+      if (phase === 'dance') {
+        const d = dance[idx];
+        return (
+          <m.span
+            key={i}
+            className="relative inline-block"
+            initial={{ x: d.x[0], y: d.y[0], rotate: d.rotate[0], scaleX: 0.85, scaleY: 0.85, opacity: 0 }}
+            animate={{ x: d.x, y: d.y, rotate: d.rotate, scaleX: d.scaleX, scaleY: d.scaleY, opacity: [0, 1, 1, 1, 1, 1] }}
+            transition={{
+              // gravity: rising and easing off, then falling and gathering speed
+              default: { duration: HOP_S, times: HOP_TIMES, ease: HOP_EASE, delay: 0.1 + idx * HOP_GAP_S },
+              x: { duration: HOP_S, times: HOP_TIMES, ease: 'linear', delay: 0.1 + idx * HOP_GAP_S },
+              rotate: { duration: HOP_S, times: HOP_TIMES, ease: 'easeInOut', delay: 0.1 + idx * HOP_GAP_S },
+              opacity: { duration: HOP_S * 0.2, delay: 0.1 + idx * HOP_GAP_S },
+            }}
+            style={{ transformOrigin: '50% 100%' }}
+          >
+            {tile}
+          </m.span>
+        );
+      }
+      return (
+        <span
+          key={i}
+          className={phase === 'drop' ? 'name-drop' : 'relative inline-block'}
+          style={phase === 'drop' ? { animationDelay: `${150 + idx * 55}ms` } : undefined}
+        >
+          {tile}
+        </span>
+      );
+    });
+
+  const showName = phase !== 'story';
 
   return (
     <section
       id="intro"
       data-section="intro"
-      className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden px-4 pt-24 pb-16"
+      className="relative min-h-[100svh] flex flex-col overflow-hidden"
+      onPointerMove={onPointerMove}
+      onPointerLeave={onPointerLeave}
     >
-      <h1 className="sr-only">{profile.name}</h1>
-      <p className="sr-only">{roles.join(', ')}</p>
-
-      <div className="relative w-fit select-none">
-        {/* --- the board --- */}
-        <div className="relative w-fit text-[11vw] sm:text-[8vw] lg:text-[6.5rem] leading-none">
-          <SplitFlap text={first} startDelay={400} instant={reduced} onStep={onStep} />
-          {/* a sparrow resting on the first flap */}
-          <Bird className="absolute left-[1%] -top-[30%] w-[12%] min-w-[30px]" />
-          {/* the owl, perched on the last flap */}
-          <GlassesOwl className="owl-perch absolute -right-[3%] -top-[62%] w-[16%] min-w-[38px]" />
-        </div>
-        <div className="mt-[0.08em] pl-[1.2em] text-[11vw] sm:text-[8vw] lg:text-[6.5rem] leading-none">
-          <SplitFlap text={last} startDelay={700} instant={reduced} onStep={onStep} />
-        </div>
-
-        {/* a sprinkle of light where the water lands */}
-        {[
-          { l: '22%', t: '8%' },
-          { l: '58%', t: '2%' },
-          { l: '82%', t: '44%' },
-          { l: '44%', t: '54%' },
-        ].map((p, i) => (
-          <svg
-            key={i}
-            viewBox="0 0 20 20"
-            className="sparkle ink-flip absolute w-3 h-3 sm:w-4 sm:h-4"
-            style={{ left: p.l, top: p.t, animationDelay: `${0.25 + i * 0.15}s` }}
-            aria-hidden
-          >
-            <path d="M10 0 L11.2 8.8 L20 10 L11.2 11.2 L10 20 L8.8 11.2 L0 10 L8.8 8.8 Z" fill="#ffffff" />
-          </svg>
-        ))}
-
-        {/* --- the line the animals stand on --- */}
-        <div className="relative mt-[6%] h-px bg-gradient-to-r from-white/0 via-white/40 to-white/0" aria-hidden>
-          <Elephant spray="tall" className="absolute left-[-2%] bottom-0 w-[13%] min-w-[64px]" />
-          <div className="absolute inset-x-[22%] bottom-0 h-8">
-            <Roamer mode="crawl" speed={40} aspect={12} points={[{ x: 0, y: 100, hold: 2 }, { x: 100, y: 100, hold: 2 }]}>
-              <WalkingCat tone="dark" className="w-12 sm:w-16" />
-            </Roamer>
-          </div>
-          <Monkey className="absolute right-[1%] bottom-[-2px] w-[6%] min-w-[30px]" />
-        </div>
-
-        {/* --- the role line: keeps flipping --- */}
-        <div className="mt-6 flex items-center justify-center gap-3">
-          {reduced ? (
-            <span className="text-[13px] sm:text-[15px] tracking-[0.3em] uppercase text-white/70">{roles.join(' · ')}</span>
-          ) : (
-            <SplitFlap
-              text={rolling ? roles[role] : ''}
-              length={roleCells}
-              onStep={onStep}
-              className="flap-small text-[5vw] sm:text-[2.6vw] lg:text-[1.75rem]"
-            />
-          )}
-          <button
-            type="button"
-            onClick={toggleSound}
-            aria-pressed={sound}
-            aria-label={sound ? 'Turn flap sound off' : 'Turn flap sound on'}
-            title={sound ? 'Flap sound: on' : 'Flap sound: off'}
-            className="shrink-0 rounded-full border border-white/20 p-2 text-white/60 hover:text-white hover:border-white/50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-400"
-          >
-            {sound ? <Volume2 className="h-4 w-4" /> : <VolumeX className="h-4 w-4" />}
-          </button>
+      {/* just the name, big, in the middle of the screen */}
+      <div className="relative flex-1 w-full max-w-7xl mx-auto px-6 sm:px-10 pt-20 pb-10 flex flex-col">
+        <div className="flex-1 flex flex-col items-center justify-center">
+          {/* --- the name, on a split-flap board --- */}
+          <h1 className="name-board relative select-none">
+            <span className="sr-only">{profile.name}</span>
+            {showName && (
+              <>
+                <span aria-hidden className="name-row">
+                  {row(first)}
+                </span>
+                <span aria-hidden className="name-row name-row-2">
+                  {row(last)}
+                </span>
+              </>
+            )}
+          </h1>
         </div>
       </div>
 
-      <div className="mt-14 flex flex-col items-center gap-3 text-white/40" aria-hidden>
-        <span className="text-[10px] tracking-[0.4em] uppercase">Scroll</span>
-        <span className="block h-10 w-px bg-gradient-to-b from-white/40 to-transparent motion-safe:animate-pulse" />
-      </div>
+      {/* the opening story */}
+      {!introDone && (
+        <IntroStory
+          onPop={() => {
+            // the colourful letters are the ones that jump around
+            setColourful(true);
+            setPhase('dance');
+          }}
+          onDone={finishIntro}
+          onSkip={() => {
+            setPhase('still');
+            finishIntro();
+          }}
+        />
+      )}
     </section>
   );
 }

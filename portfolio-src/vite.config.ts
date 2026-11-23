@@ -9,6 +9,23 @@ import path from 'node:path';
 // already next to the built index.html.
 const siteRoot = fileURLToPath(new URL('..', import.meta.url));
 const staticPrefixes = ['/images/', '/docs/', '/cv/', '/kayysee/', '/dash-and-dine/', '/fresh-farm-market/', '/favicon.svg', '/og-image.png'];
+// Browsers refuse module scripts without a JavaScript content type, so the
+// prototypes inside the iframes stayed blank in dev until this was set.
+const TYPES: Record<string, string> = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript',
+  '.mjs': 'text/javascript',
+  '.css': 'text/css',
+  '.json': 'application/json',
+  '.svg': 'image/svg+xml',
+  '.png': 'image/png',
+  '.jpg': 'image/jpeg',
+  '.jpeg': 'image/jpeg',
+  '.webp': 'image/webp',
+  '.avif': 'image/avif',
+  '.pdf': 'application/pdf',
+  '.woff2': 'font/woff2',
+};
 
 function serveSiteRoot(): Plugin {
   return {
@@ -21,6 +38,8 @@ function serveSiteRoot(): Plugin {
         if (!file.startsWith(siteRoot)) return next();
         if (fs.existsSync(file) && fs.statSync(file).isDirectory()) file = path.join(file, 'index.html');
         if (!fs.existsSync(file)) return next();
+        const type = TYPES[path.extname(file).toLowerCase()];
+        if (type) res.setHeader('Content-Type', type);
         fs.createReadStream(file).pipe(res);
       });
     },

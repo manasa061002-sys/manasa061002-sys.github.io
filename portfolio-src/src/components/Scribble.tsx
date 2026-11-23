@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 
 /**
- * A handwritten note in the margin. Only shown in Artist mode (see .scribble
+ * A handwritten note in the margin. Only shown on the paper half of the page (see .scribble
  * in index.css); purely decorative, so screen readers skip it. On large
  * screens it floats beside the heading, on small screens it sits under it.
  */

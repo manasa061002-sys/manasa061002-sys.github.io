@@ -1,7 +1,5 @@
 import type { CSSProperties, ReactNode } from 'react';
-import Roamer from '@/components/Roamer';
 import Picture from '@/components/Picture';
-import { Chameleon } from '@/components/Critters';
 
 /**
  * The Creative section as a designer's desk: real work laid out on a cutting
@@ -30,7 +28,6 @@ function Item({
     <button
       type="button"
       onClick={() => onOpen(id)}
-      data-evidence={`creative-${id}`}
       aria-label={`Open ${label}`}
       className="desk-item group text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-pink-300 rounded-lg"
       style={style}
@@ -55,21 +52,6 @@ const D = '/images/desk/';
 export default function DesignDesk({ onOpen }: { onOpen: (id: string) => void }) {
   return (
     <div className="relative grid grid-cols-2 gap-x-6 gap-y-10 md:block md:aspect-[2/1] max-h-[1100px]">
-      {/* a chameleon ambling along the front edge of the desk */}
-      <div className="hidden md:block">
-        <Roamer
-          mode="crawl"
-          speed={90}
-          aspect={2}
-          className="z-20"
-          points={[
-            { x: 4, y: 100, hold: 4 }, { x: 48, y: 100, hold: 5 }, { x: 94, y: 100, hold: 4 }, { x: 56, y: 100, hold: 5 },
-          ]}
-        >
-          <Chameleon className="w-28" />
-        </Roamer>
-      </div>
-
       {/* ---- clutter ---- */}
       {/* the scale (ruler) */}
       <Decor x="33%" y="46%" w="25%" r="-2deg">
