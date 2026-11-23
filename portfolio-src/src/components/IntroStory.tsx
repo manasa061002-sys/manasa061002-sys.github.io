@@ -10,9 +10,9 @@ import { useEffect, useMemo, useRef, useState, type CSSProperties, type Keyboard
  * dance into place. She pops back up in her usual corner as the guide.
  * "Skip the dramatics" ends it at any point.
  *
- * The photo that pops in after Chemical X: Manasa in a snowy mountain valley.
+ * The photo that pops in after Chemical X: Manasa on a sunny mountain ridge above the clouds.
  */
-const INTRO_PHOTO = '/images/opt/manasa-snow-480.webp';
+const INTRO_PHOTO = '/images/opt/manasa-mountain-480.webp';
 
 /** The confetti's colours: the name board's colourful letters, plus white. */
 const CONFETTI_COLOURS = ['#9b2fd4', '#ff5ec4', '#e6f23b', '#7cc94a', '#ffcf5c', '#2fd0c4', '#ff5e8a', '#4f6bff', '#4fc3f7', '#ff4f9a', '#fff'];
@@ -334,7 +334,7 @@ export default function IntroStory({ onPop, onDone, onSkip }: { onPop: () => voi
               {prop === 'photo' && (
                 <div className="intro-photo">
                   <span className="intro-burst" aria-hidden />
-                  <img src={INTRO_PHOTO} alt="Manasa smiling in a snowy mountain valley" />
+                  <img src={INTRO_PHOTO} alt="Manasa smiling on a sunny mountain ridge above the clouds" />
                 </div>
               )}
             </div>
