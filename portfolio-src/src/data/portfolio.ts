@@ -334,6 +334,21 @@ export type ProductConcept = {
 
 export const productConcepts: ProductConcept[] = [
   {
+    "id": "vantage",
+    "screen": { "kind": "browser", "src": "/images/screens/vantage.jpg", "label": "manasa061002-sys.github.io/vantage" },
+    "title": "Vantage",
+    "period": "11/2026",
+    "summary": "Two prototypes about the moment a depot changes hands. Between banks: Where’s my trade? It tells clients where their shares are, in the app and on the website. Between generations: Handover at 18, a child’s pension depot that becomes theirs at 18.",
+    "highlights": [
+      "Where’s my trade? Three situations, an ops view and a settlement explainer",
+      "Handover at 18: the same depot, explained differently from age 6 to 18",
+      "Connected: moving the depot at 18 opens the tracker"
+    ],
+    "image": "/images/screens/vantage.jpg",
+    "accent": "from-blue-500 to-red-500",
+    "link": "/vantage/"
+  },
+  {
     "id": "kayysee",
     "screen": { "kind": "browser", "src": "/images/screens/kayysee.jpg", "label": "manasa061002-sys.github.io/kayysee" },
     "title": "KayYSee: Re-KYC & Customer Lifecycle Concept",
@@ -419,8 +434,7 @@ export const skills = {
     'User Research & Customer Discovery',
     'Feature Prioritisation & Roadmapping',
     'Prototyping & User Flows',
-    'Product Metrics & Funnel Analysis',
-    'Agile & Scrum Delivery',
+    'Product Metrics',
   ],
   tools: [
     'Microsoft 365',

@@ -12,6 +12,19 @@ const PDF_PAGES = 7;
 
 /** Each project's app icon: a colour and a little hand-drawn picture (naive style). */
 const APPS: Record<string, { colour: string; ink: string; short: string; glyph: ReactNode }> = {
+  'vantage': {
+    colour: '#93c5fd',
+    ink: '#1e3a8a',
+    short: 'Vantage',
+    // a parcel with a question mark
+    glyph: (
+      <>
+        <path d="M10 18 L 24 12 L 38 18 L 38 33 L 24 39 L 10 33 Z" />
+        <path d="M10 18 L 24 24 L 38 18 M24 24 L 24 39" />
+        <path d="M31 7 C 34 4, 39 6, 37 10 C 36 12, 34 12, 34 14" />
+      </>
+    ),
+  },
   kayysee: {
     colour: '#fde047',
     ink: '#713f12',

@@ -8,7 +8,7 @@ import path from 'node:path';
 // root, one level up. In dev, serve them from there; in production they are
 // already next to the built index.html.
 const siteRoot = fileURLToPath(new URL('..', import.meta.url));
-const staticPrefixes = ['/images/', '/docs/', '/cv/', '/kayysee/', '/dash-and-dine/', '/fresh-farm-market/', '/favicon.svg', '/og-image.png'];
+const staticPrefixes = ['/images/', '/docs/', '/cv/', '/kayysee/', '/wheres-my-trade/', '/handover-at-18/', '/vantage/', '/dash-and-dine/', '/fresh-farm-market/', '/favicon.svg', '/og-image.png'];
 // Browsers refuse module scripts without a JavaScript content type, so the
 // prototypes inside the iframes stayed blank in dev until this was set.
 const TYPES: Record<string, string> = {

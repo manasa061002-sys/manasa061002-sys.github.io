@@ -1,0 +1,102 @@
+/* Spec page for Where's my trade?: same type and amber as the prototype, on paper. */
+:root {
+  --page: #f2f4f8;
+  --screen: #ffffff;
+  --ink: #14213d;
+  --grey: #5f6984;
+  --light: #a6afc3;
+  --line: #e1e6ef;
+  --green: #1d3f8f;
+  --green-soft: #e8eefa;
+  --font: 'Overpass', 'Segoe UI', Arial, sans-serif;
+  --mono: 'Overpass Mono', Consolas, monospace;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink); font: 400 16px/1.55 var(--font); }
+:focus-visible { outline: 2px solid var(--green); outline-offset: 2px; }
+.page { max-width: 1040px; margin: 0 auto; padding: 22px 16px 28px; }
+.page-foot { display: flex; flex-direction: column; gap: 6px; margin-top: 28px; font-size: 14px; color: var(--grey); }
+.page-foot a { color: var(--ink); text-decoration-color: var(--green); text-underline-offset: 3px; }
+.page-foot p { margin: 0; }
+@media (min-width: 640px) {
+  .page { padding: 40px 28px 44px; }
+  .page-foot { flex-direction: row; justify-content: space-between; align-items: baseline; margin-top: 48px; }
+}
+
+.doc { max-width: 820px; }
+.doc-back { display: inline-block; margin-bottom: 18px; color: var(--green); font-size: 15px; text-underline-offset: 3px; }
+.doc-body { padding: 30px 20px 34px; border-radius: 18px; background: var(--screen); }
+.doc-body h1 { margin: 0; font-weight: 800; font-size: 30px; line-height: 1.15; letter-spacing: -0.015em; }
+.doc-meta { margin: 8px 0 0; color: var(--grey); font-size: 14px; }
+.doc-body h2 { margin: 44px 0 6px; font-size: 21px; letter-spacing: -0.01em; }
+.doc-body h2 .no { margin-right: 8px; color: var(--green); font-family: var(--mono); font-size: 15px; font-weight: 400; }
+.doc-body p { margin: 0 0 12px; max-width: 62ch; }
+.doc-body .lead { font-size: 18px; }
+.muted { color: var(--grey); }
+.small { font-size: 14px; }
+
+/* the three-line summary at the top */
+.tldr { display: grid; gap: 10px; margin: 26px 0 0; padding: 0; list-style: none; }
+.tldr li { padding: 14px 16px; border-radius: 12px; background: var(--page); }
+.tldr b { display: block; margin-bottom: 2px; color: var(--green); font-size: 14px; }
+
+/* a flow of boxes with arrows between them */
+.flow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 18px 0 4px; }
+.flow .node { padding: 10px 12px; border-radius: 10px; background: var(--page); font-size: 15px; font-weight: 500; }
+.flow .node.is-hidden { background: #fff; box-shadow: inset 0 0 0 1.5px var(--line); color: var(--grey); font-weight: 400; }
+.flow .node.is-key { background: var(--green-soft); color: var(--green); }
+.flow .arrow { color: var(--light); }
+.seen { display: flex; align-items: center; gap: 10px; margin: 6px 0 16px; font-size: 14px; color: var(--grey); }
+.seen span { flex: 1; height: 0; border-top: 2px dashed var(--light); }
+
+/* bar chart: the tax example */
+.bars { margin: 18px 0 6px; }
+.bar-row { display: grid; grid-template-columns: 1fr; gap: 4px; margin-bottom: 14px; }
+.bar-label { font-size: 15px; }
+.bar-track { display: flex; align-items: center; gap: 10px; }
+.bar { height: 22px; border-radius: 0 4px 4px 0; background: var(--light); }
+.bar.is-accent { background: #d7332a; }
+.bar-val { font-size: 15px; font-weight: 700; white-space: nowrap; }
+
+/* business days */
+.days-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin: 16px 0 8px; padding: 0; list-style: none; }
+.days-strip li { padding: 12px; border-radius: 10px; background: var(--page); font-size: 14px; }
+.days-strip b { display: block; font-size: 16px; }
+.days-strip .is-settle { background: var(--green-soft); }
+.days-strip .is-settle b { color: var(--green); }
+
+/* the six steps, as a line */
+.steps { display: grid; grid-template-columns: 1fr; gap: 0; margin: 18px 0 8px; padding: 0; list-style: none; counter-reset: st; }
+.steps li { counter-increment: st; position: relative; padding: 0 0 14px 34px; font-size: 15px; }
+.steps li::before { content: counter(st); position: absolute; left: 0; top: 0; width: 22px; height: 22px; border-radius: 50%; background: var(--green-soft); color: var(--green); font: 400 13px/22px var(--mono); text-align: center; }
+.steps li:not(:last-child)::after { content: ''; position: absolute; left: 10.5px; top: 24px; bottom: 2px; width: 1px; background: var(--line); }
+
+/* tables */
+.table-wrap { overflow-x: auto; margin: 14px 0 8px; }
+.doc-body table { width: 100%; min-width: 520px; border-collapse: collapse; font-size: 15px; }
+.doc-body th, .doc-body td { padding: 11px 14px 11px 0; text-align: left; vertical-align: top; border-bottom: 1px solid var(--line); }
+.doc-body thead th { font-size: 13px; font-weight: 500; color: var(--grey); }
+.doc-body tbody th { font-weight: 700; }
+.doc-body td ul { margin: 0; padding-left: 16px; }
+.doc-body td li { margin: 2px 0; }
+.num-cell { font-family: var(--mono); color: var(--green); }
+.pill { display: inline-block; padding: 1px 8px; border-radius: 999px; background: var(--page); font-size: 13px; white-space: nowrap; }
+.pill.is-main { background: var(--green); color: #fff; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 14px 0 10px; padding: 0; list-style: none; }
+.chips li { padding: 6px 12px; border-radius: 999px; box-shadow: inset 0 0 0 1.5px var(--line); font-size: 14px; color: var(--grey); text-decoration: line-through; text-decoration-color: var(--light); }
+
+.questions { margin: 14px 0 0; padding-left: 20px; }
+.questions li { margin: 0 0 8px; padding-left: 4px; }
+
+.placeholder { margin-top: 24px; padding: 26px 18px; border-radius: 12px; background: var(--page); text-align: center; color: var(--grey); }
+
+.cta { display: inline-block; margin-top: 18px; padding: 10px 16px; border-radius: 10px; background: var(--ink); color: #fff; text-decoration: none; font-weight: 500; }
+.cta:hover { background: #33332f; }
+
+@media (min-width: 640px) {
+  .doc-body { padding: 48px 52px 52px; }
+  .doc-body h1 { font-size: 36px; }
+  .tldr { grid-template-columns: repeat(3, 1fr); }
+  .bar-row { grid-template-columns: 210px 1fr; align-items: center; gap: 14px; }
+}

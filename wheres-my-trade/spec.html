@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Product spec · Where’s my trade?</title>
+    <meta name="description" content="Manasa Rammohan’s product spec for the transfer tracker prototype Where’s my trade?" />
+    <meta name="theme-color" content="#f2f4f8" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Overpass+Mono:wght@400&family=Overpass:wght@400;600;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./spec.css" />
+  </head>
+  <body>
+    <div class="page doc">
+      <a class="doc-back" href="./">Back to the prototype</a>
+
+      <article class="doc-body">
+        <h1>Where’s my trade?</h1>
+
+        <ul class="tldr">
+          <li><b>The problem</b>Clients can’t see what happens after a trade or transfer, so they ask Client Service, who ask Ops.</li>
+          <li><b>What I built</b>A transfer tracker, a “why is it pending” explainer and an ops view that reads the same status.</li>
+          <li><b>How I’d know</b>Fewer “where is my transfer” tickets per 100 transfers.</li>
+        </ul>
+        <a class="cta" href="./">Open the prototype</a>
+
+        <h2><span class="no">01</span>Why I made this</h2>
+        <p>I read your job description and was inspired to build this.</p>
+        <p>I studied banking and finance at HSLU, so clearing, settlement and custody aren’t new words to me. I’ve spent the past year practising product management by building my own products (KayYSee, Dash &amp; Dine and Fresh Farm Market).</p>
+        <p>So instead of only saying I understand this kind of problem, I tried working on one. It uses fake data and some guessing about your side. Wherever I guessed, I say so.</p>
+
+        <h2><span class="no">02</span>The problem</h2>
+        <p>The job description says this role will “help shape complex post-trade journeys”, including securities transfers. That’s the one I picked.</p>
+
+        <p class="lead"><b>A depot transfer goes on a trip the client can’t see.</b></p>
+        <div class="flow" aria-label="The journey of a depot transfer">
+          <span class="node">The app</span><span class="arrow" aria-hidden="true">→</span>
+          <span class="node is-hidden">Old broker</span><span class="arrow" aria-hidden="true">→</span>
+          <span class="node is-hidden">Clearstream</span><span class="arrow" aria-hidden="true">→</span>
+          <span class="node is-hidden">Custody and ops</span><span class="arrow" aria-hidden="true">→</span>
+          <span class="node">The app</span>
+        </div>
+        <p class="seen"><span></span>for days, the client only sees “in progress”<span></span></p>
+        <p>Meanwhile the old account can look empty before the new one is full, and nobody says whether that’s normal.</p>
+
+        <p class="lead"><b>So the same question travels through two layers of people.</b></p>
+        <div class="flow" aria-label="Where the question goes">
+          <span class="node">Client</span><span class="arrow" aria-hidden="true">→</span>
+          <span class="node">Client Service</span><span class="arrow" aria-hidden="true">→</span>
+          <span class="node is-key">Ops, who actually know</span>
+        </div>
+
+        <p class="lead" style="margin-top: 28px"><b>Missing purchase prices hurt later, at tax time.</b></p>
+        <p>If the old bank doesn’t send the cost basis and the client sells, the substitute rule (Ersatzbemessungsgrundlage) treats 30% of the sale amount as profit. An example:</p>
+        <div class="bars" role="img" aria-label="Bought for 9,000 euros, sold for 10,000 euros. With purchase prices, about 264 euros tax. Without, about 791 euros.">
+          <div class="bar-row">
+            <span class="bar-label">With purchase prices<br /><span class="muted small">profit taxed: €1,000</span></span>
+            <span class="bar-track"><span class="bar" style="width: 23.4%"></span><span class="bar-val">€264 tax</span></span>
+          </div>
+          <div class="bar-row">
+            <span class="bar-label">Prices missing<br /><span class="muted small">profit taxed: €3,000</span></span>
+            <span class="bar-track"><span class="bar is-accent" style="width: 70%"></span><span class="bar-val">€791 tax</span></span>
+          </div>
+        </div>
+        <p class="muted small">Bought for €9,000, sold for €10,000. Flat tax of 26.375% with solidarity surcharge and without church tax, rounded. The client can fix it in their tax return, but most only find out afterwards.</p>
+
+        <p class="lead" style="margin-top: 28px"><b>And every normal trade says “pending” for a while.</b></p>
+        <ul class="days-strip" aria-label="Settlement days">
+          <li><b>Mon</b>You buy (T)</li>
+          <li><b>Tue</b>Still pending</li>
+          <li class="is-settle"><b>Wed</b>Settled (T+2)</li>
+        </ul>
+        <p class="muted small">From October 2027 the EU moves to T+1, so this would settle on Tuesday.</p>
+
+        <h2><span class="no">03</span>Who feels it</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Who</th><th scope="col">What they want</th><th scope="col">Today</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Client</th><td>Where is my trade? Is something wrong? Do I need to act?</td><td>The honest answer is usually “nothing, just wait”. Nobody says it.</td></tr>
+              <tr><th scope="row">Client Service</th><td>An answer without asking Ops</td><td>Gets the tickets and mostly has to check with Ops anyway.</td></tr>
+              <tr><th scope="row">Ops</th><td>Fewer repeat questions</td><td>Knows the step but answers through two layers of people.</td></tr>
+              <tr><th scope="row">CSDs and settlement partners</th><td>Not users</td><td>Their timing decides what the tracker can honestly promise.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2><span class="no">04</span>What I built</h2>
+        <p>I built two connected screens, because a transfer and a trade both end in settlement and the client doesn’t care which one it is.</p>
+        <p class="lead"><b>Where’s my trade?</b> A trade tracker where the trades are your shares.</p>
+        <ol class="steps">
+          <li>Request sent</li>
+          <li>Old broker got it</li>
+          <li>Old broker sent the shares</li>
+          <li>In transit through the CSD</li>
+          <li>Arrived in your account</li>
+          <li>Purchase prices received</li>
+        </ol>
+        <p>Each step says in one sentence what’s happening and who’s on it. Every position has its own status, because an ETF can land on Tuesday and a US stock a week later.</p>
+        <p class="lead"><b>Why does it say pending?</b> It explains the gap between pressing Buy and settlement, and opens from anywhere the app says “pending”.</p>
+        <p class="lead"><b>Ops view.</b> The same transfer as a table: position, step, days in step and a flag when it’s late. The client screen and the ops screen read the same status.</p>
+        <p class="muted">Next, if there’s time: the Altersvorsorgedepot, from 1 January 2027. People will ask the same questions there. I sketched one moment of it separately: <a href="../handover-at-18/">Handover at 18</a>.</p>
+
+        <h2><span class="no">05</span>How I’d know it’s working</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th scope="col">Metric</th><th scope="col">Role</th><th scope="col">Should</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">“Where is my transfer” tickets per 100 transfers</th><td><span class="pill is-main">Main</span></td><td>go down</td></tr>
+              <tr><th scope="row">Clients who open the tracker vs. clients who still write in</th><td><span class="pill">Adoption</span></td><td>go up</td></tr>
+              <tr><th scope="row">Sales of positions still missing purchase prices</th><td><span class="pill">Guardrail</span></td><td>go down once there’s a warning</td></tr>
+              <tr><th scope="row">Days per step, per counterparty</th><td><span class="pill">For Ops</span></td><td>show which brokers are always slow</td></tr>
+              <tr><th scope="row">Transfer forms started but never finished</th><td><span class="pill">Curiosity</span></td><td>a different problem, same journey</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2><span class="no">06</span>Questions I’d bring to the team</h2>
+        <ol class="questions">
+          <li>Which of the six steps do you get a signal for today, and which are silent?</li>
+          <li>How long is “usual” for each step, and does it depend a lot on the old broker? My guess is yes.</li>
+          <li>How often do purchase prices arrive late or not at all, and what happens then?</li>
+          <li>Does Client Service already have something like the ops view, and would they trust it?</li>
+          <li>For the Altersvorsorgedepot, what’s the first post-trade question you expect in January?</li>
+        </ol>
+      </article>
+
+      <footer class="page-foot">
+        <a href="./">Back to the prototype</a>
+      </footer>
+    </div>
+  </body>
+</html>
