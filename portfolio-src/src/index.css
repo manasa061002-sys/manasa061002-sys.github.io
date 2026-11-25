@@ -76,6 +76,18 @@
   color: inherit;
 }
 
+/* inside the research notebook (paper on the dark half) highlighted words stay black */
+.notebook-page ::selection,
+.notebook-page::selection {
+  background: rgba(236, 72, 153, 0.25);
+  color: #111;
+  -webkit-text-fill-color: #111;
+}
+.notebook-page ::-moz-selection {
+  background: rgba(236, 72, 153, 0.25);
+  color: #111;
+}
+
 /* ---- Utility classes ---- */
 .text-gradient-vibrant {
   background: linear-gradient(120deg, #ec4899, #facc15, #06b6d4, #ec4899);
@@ -667,7 +679,7 @@ section[id] {
 .text-signature { color: rgb(var(--signature)); }
 
 /* section header: the number in pink, the label on a small split-flap board */
-.section-no { font-size: 12px; font-weight: 500; letter-spacing: 0.2em; color: rgb(var(--signature)); }
+.section-no { margin-right: 0.35em; font-variant-numeric: lining-nums tabular-nums; color: rgb(var(--signature)); }
 .flap-label { font-size: 13px; }
 .flap-label .flap-cell { width: 0.95em; height: 1.55em; font-weight: 600; }
 .zone-light .flap-label .flap-cell {

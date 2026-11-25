@@ -396,7 +396,7 @@ export default function ProductConcepts() {
     <section id="products" data-section="products" className="relative overflow-x-clip py-16 sm:py-24 px-6 sm:px-10 max-w-5xl mx-auto">
       <NaiveDoodle kind="daisy" className="right-0 top-[38%] w-10" />
       <NaiveDoodle kind="star" className="left-0 bottom-[18%] w-9" delay={0.4} />
-      <SectionHead no="04" label="INNOVATION" title="Product Concepts & Prototypes" tone="light" scribble="unlock it, then open an app" />
+      <SectionHead no="04" title="Products" tone="light" scribble="unlock it, then open an app" />
       <Laptop />
     </section>
   );

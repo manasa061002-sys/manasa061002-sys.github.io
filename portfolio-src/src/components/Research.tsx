@@ -37,7 +37,7 @@ export default function Research() {
 
   return (
     <section id="research" data-section="research" className="py-16 sm:py-24 px-6 sm:px-10 max-w-5xl mx-auto">
-      <SectionHead no="03" label="SCHOLARSHIP" title="Academic Research" />
+      <SectionHead no="03" title="Academic Research" />
 
       <div className={`notebook relative mx-auto max-w-4xl ${open ? 'is-open' : ''}`}>
         {/* the spiral binding */}
@@ -63,7 +63,6 @@ export default function Research() {
                   <X className="h-4 w-4" aria-hidden /> Close the notebook
                 </button>
               </div>
-              <h3 className="mt-6 text-[clamp(1.8rem,3.4vw,2.6rem)] font-medium leading-[1.08] text-gray-900">Research papers</h3>
               <ol className="mt-6 divide-y divide-gray-300 border-y border-gray-300">
                 {research.map((r, i) => (
                   <li key={r.id}>

@@ -199,7 +199,7 @@ export default function Gallery() {
       </Roamer>
       <NaiveDoodle kind="cloud" className="right-0 top-36 w-10" />
       <NaiveDoodle kind="daisy" className="left-0 bottom-32 w-9" delay={0.5} />
-      <SectionHead no="07" label="BEYOND WORK" title="Life & Interests" tone="light" scribble="can you find all four groups?" />
+      <SectionHead no="07" title="Life" tone="light" scribble="can you find all four groups?" />
 
       <div className="max-w-3xl mx-auto">
         <p aria-live="polite" className="text-center text-[15px] text-gray-700 min-h-[1.5em] mb-5">

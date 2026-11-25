@@ -1,7 +1,7 @@
 export const profile = {
   name: 'Manasa Rammohan',
   // the About heading
-  positioning: 'Generalist',
+  positioning: 'Always aspiring to be the best',
   tagline:
     'A jack of all trades is a master of none, but oftentimes better than a master of one.',
   quote:

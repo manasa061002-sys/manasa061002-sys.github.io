@@ -299,7 +299,7 @@ export default function About() {
         {/* Left: identity */}
         <div>
           {/* The name is set large once, in the welcome screen; About opens with the positioning. */}
-          <SectionHead no="01" label="ABOUT" title={profile.positioning} />
+          <SectionHead no="01" title="About" lead={profile.positioning} />
 
           <div className="flex flex-wrap gap-2">
             {profile.roles.map((r) => (

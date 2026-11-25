@@ -50,11 +50,11 @@ export function useScrollLock(locked: boolean) {
 
 export const sections = [
   { id: 'about', label: 'About' },
-  { id: 'experience', label: 'Experience' },
-  { id: 'research', label: 'Research' },
+  { id: 'experience', label: 'Work Experience' },
+  { id: 'research', label: 'Academic Research' },
   { id: 'products', label: 'Products' },
-  { id: 'creative', label: 'Creative' },
-  { id: 'skills', label: 'Skills' },
+  { id: 'creative', label: 'Creative Decks' },
+  { id: 'skills', label: 'Skills & Certifications' },
   { id: 'life', label: 'Life' },
 ];
 

@@ -46,7 +46,7 @@ export default function Creative() {
       {/* ruler ticks along the top edge of the mat */}
       <div className="desk-ruler absolute top-0 inset-x-0 h-3" aria-hidden />
       <div className="relative px-6 sm:px-10 max-w-5xl mx-auto">
-        <SectionHead no="05" label="CRAFT" title="Creative Projects & Decks" scribble="click anything on the desk" />
+        <SectionHead no="05" title="Creative Decks" scribble="click anything on the desk" />
       </div>
 
       <div className="reveal px-6 sm:px-10 lg:px-14">

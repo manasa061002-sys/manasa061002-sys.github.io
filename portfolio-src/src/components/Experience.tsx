@@ -136,7 +136,7 @@ export default function Experience() {
       ref={ref}
       className="relative overflow-x-clip py-16 sm:py-24 px-6 sm:px-10 max-w-5xl mx-auto"
     >
-      <SectionHead no="02" label="CAREER" title="Work Experience" scribble="the day jobs ↓" />
+      <SectionHead no="02" title="Work Experience" scribble="the day jobs ↓" />
 
       <div ref={timeline} className={`relative ${reduced ? '' : 'flight-ready'}`}>
         <RouteLine target={timeline} cards={cards} />

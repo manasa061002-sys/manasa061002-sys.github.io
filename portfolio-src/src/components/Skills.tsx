@@ -39,7 +39,6 @@ export default function Skills() {
       <NaiveDoodle kind="heart" className="left-0 top-[60%] w-9" delay={0.3} />
       <SectionHead
         no="06"
-        label="CAPABILITIES"
         title="Skills & Certifications"
         tone="light"
         scribble="the toolkit"
