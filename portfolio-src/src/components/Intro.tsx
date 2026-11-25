@@ -4,11 +4,39 @@ import { profile } from '@/data/portfolio';
 import { useReducedMotionSafe } from '@/lib/useReducedMotionSafe';
 import { useScrollLock, useSite } from '@/lib/site';
 import IntroStory from '@/components/IntroStory';
+import { playMotion, type MotionKind } from '@/heroMotion';
 
 /** How far (in px) the pointer's pull on a tile reaches. */
 const REACH = 150;
-/** How often the board switches between its white and its colourful letters. */
+/** How often the board switches to its next letter style. */
 const FLIP_EVERY_MS = 5000;
+/** Colourful styles stay up longer, so their five hops can take their time. */
+const COLOUR_STAYS_MS = 6000;
+
+/**
+ * The board's letter styles. It alternates: one black-and-white style, then one
+ * colourful style, then black and white again, and so on. Within each group the
+ * styles are shuffled and every one is used before any comes round again.
+ */
+const MONO = ['plain', 'gothic', 'ornate', 'scandi', 'outline'] as const;
+const COLOUR = ['colour', 'candy', 'ransom', 'drip', 'dots', 'lines'] as const;
+type Look = (typeof MONO)[number] | (typeof COLOUR)[number];
+
+/** Hands out a group's styles in a shuffled order, never the same one twice in a row. */
+function bag<T>(items: readonly T[], shownFirst?: T) {
+  // the style the board opens on waits for the next round
+  let left: T[] = [...items].filter((x) => x !== shownFirst).sort(() => Math.random() - 0.5);
+  let last: T | undefined = shownFirst;
+  return (): T => {
+    if (!left.length) {
+      left = [...items].sort(() => Math.random() - 0.5);
+      // a fresh shuffle must not start with the style just shown
+      if (left[0] === last) left.push(left.shift()!);
+    }
+    last = left.shift()!;
+    return last;
+  };
+}
 
 /**
  * Each letter's colour on the colourful side of the board: a bright fill and a
@@ -26,7 +54,7 @@ const LETTER_COLOURS: Record<string, { fill: string; edge: string }> = {
 
 /** The letters a tile rattles through, and how fast: the same as the section labels. */
 const FLAP_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-const STEP_MS = 42;
+const STEP_MS = 75;
 
 /**
  * One tile of the name board. Each time the board switches between white and
@@ -34,15 +62,18 @@ const STEP_MS = 42;
  * departure board) and lands on its own letter in the new style. Tiles start
  * one after another along the name.
  */
-function FlapTile({ ch, colourful, index, fill, edge }: { ch: string; colourful: boolean; index: number; fill: string; edge: string }) {
+function FlapTile({ ch, look, index, fill, edge }: { ch: string; look: Look; index: number; fill: string; edge: string }) {
   const [shown, setShown] = useState(ch);
   const [step, setStep] = useState(0);
+  // each tile takes on the new style only when its own flip starts, so the
+  // change travels along the name in a wave instead of hitting every tile at once
+  const [tileLook, setTileLook] = useState(look);
   // rattle only when the style really changes (not on the first paint)
-  const prev = useRef(colourful);
+  const prev = useRef(look);
   useEffect(() => {
-    if (prev.current === colourful) return;
-    prev.current = colourful;
-    const steps = 9 + (index % 5);
+    if (prev.current === look) return;
+    prev.current = look;
+    const steps = 4 + (index % 3);
     const from = (FLAP_CHARS.indexOf(ch) + 5 + index * 3) % FLAP_CHARS.length;
     let k = 0;
     let timer = 0;
@@ -56,17 +87,77 @@ function FlapTile({ ch, colourful, index, fill, edge }: { ch: string; colourful:
       setShown(FLAP_CHARS[(from + k) % FLAP_CHARS.length]);
       timer = window.setTimeout(tick, STEP_MS);
     };
-    timer = window.setTimeout(tick, index * 70);
+    timer = window.setTimeout(() => {
+      setTileLook(look);
+      tick();
+    }, index * 110);
     return () => window.clearTimeout(timer);
-  }, [colourful, ch, index]);
+  }, [look, ch, index]);
   return (
-    <span className={`nflap ${colourful ? 'is-colourful' : ''}`} style={{ ['--fill' as string]: fill, ['--edge' as string]: edge } as CSSProperties}>
+    <span
+      className="nflap"
+      data-look={tileLook}
+      data-v={index % 4}
+      style={{ ['--fill' as string]: fill, ['--edge' as string]: edge } as CSSProperties}
+    >
       <span key={step} className={`nflap-char ${step ? 'flap-anim' : ''}`}>
         {shown}
       </span>
     </span>
   );
 }
+
+/** How many letters hop on each colourful style, when the first goes, and the gap between them (ms). */
+const HOPS = 5;
+const HOP_START_MS = 1780;
+const HOP_GAP_MS = 250;
+/** How long a ripple takes to travel one tile width outward from where it starts (ms). */
+const RIPPLE_STEP_MS = 120;
+
+/**
+ * Picks the letters that hop on a colourful style, and their order, so it
+ * really looks random: no two hoppers sit next to each other (in either row),
+ * one hop never follows a letter close by, and none of the letters that hopped
+ * last time hop again. Distances come from where the tiles really are on screen.
+ */
+function pickHoppers(tiles: HTMLElement[], before: number[]): number[] {
+  const boxes = tiles.map((t) => t?.getBoundingClientRect());
+  const w = boxes[0]?.width || 1;
+  const apart = (a: number, b: number) => {
+    const p = boxes[a];
+    const q = boxes[b];
+    if (!p || !q) return Math.abs(a - b);
+    return Math.hypot(p.left - q.left, p.top - q.top) / w; // in tile widths
+  };
+  const shuffled = (xs: number[]) => xs.sort(() => Math.random() - 0.5);
+  const all = [...Array(tiles.length).keys()];
+  // try the strict rules first, then ease off so a pick is always found
+  for (const [near, follow, avoidBefore] of [
+    [1.7, 2.6, true],
+    [1.7, 1.7, true],
+    [1.7, 1.7, false],
+    [0, 0, false],
+  ] as const) {
+    for (let tries = 0; tries < 60; tries++) {
+      const pool = shuffled(all.filter((i) => !avoidBefore || !before.includes(i)));
+      const picks: number[] = [];
+      for (const i of pool) {
+        if (picks.length === HOPS) break;
+        if (picks.some((p) => apart(p, i) < near)) continue;
+        if (picks.length && apart(picks[picks.length - 1], i) < follow) continue;
+        picks.push(i);
+      }
+      if (picks.length === HOPS) return picks;
+    }
+  }
+  return shuffled(all).slice(0, HOPS);
+}
+
+/**
+ * The ways letters can move on a colourful style (played by heroMotion). Each
+ * colourful style gets one, shuffled so every kind has a turn before any comes round again.
+ */
+const MOTIONS: readonly MotionKind[] = ['hop', 'bounce', 'stretch', 'morph', 'orbit', 'ripple', 'flip', 'glitch'];
 
 /** When each keyframe of a tile's jumps falls: take-off, peak, land, small peak, land, settle. */
 const HOP_TIMES = [0, 0.32, 0.62, 0.76, 0.9, 1];
@@ -96,32 +187,69 @@ export default function Intro() {
   const { introDone, finishIntro } = useSite();
   // story: the story is playing; dance: the tiles dance in; drop: no story (reduced motion); still: skipped
   const [phase, setPhase] = useState<'story' | 'dance' | 'drop' | 'still'>(introDone ? 'drop' : 'story');
-  const [colourful, setColourful] = useState(false);
+  const [shown, setShown] = useState<Look>('plain');
+  const look: Look = reduced ? 'plain' : shown;
+  const nextMono = useRef(bag(MONO, 'plain' as Look));
+  const nextColour = useRef(bag(COLOUR, 'colour' as Look));
+  const current = useRef<Look>('plain');
+  const isColour = (l: Look) => (COLOUR as readonly string[]).includes(l);
+  // on a colourful style, five letters picked at random move one after another, then the board moves on.
+  // The moves are played straight onto the letters' wrappers, so the board never re-renders for them.
+  const movers = useRef<HTMLSpanElement[]>([]);
+  const nextMotion = useRef(bag(MOTIONS));
+  const lastHoppers = useRef<number[]>([]);
   useScrollLock(!introDone);
+
+  useEffect(() => {
+    if (reduced || phase === 'story' || !isColour(look)) return;
+    const kind = nextMotion.current();
+    const play = (idx: number) => {
+      const el = movers.current[idx];
+      if (el) playMotion(kind, el);
+    };
+    let timers: number[];
+    if (kind === 'ripple') {
+      // a ripple spreads outward from one random letter, reaching each letter by its distance
+      const boxes = letters.current.map((el) => el?.getBoundingClientRect());
+      const w = boxes[0]?.width || 1;
+      const from = Math.floor(Math.random() * boxes.length);
+      const o = boxes[from];
+      timers = boxes.map((b, idx) => {
+        const d = o && b ? Math.hypot(b.left - o.left, b.top - o.top) / w : Math.abs(idx - from);
+        return window.setTimeout(() => play(idx), 2000 + d * RIPPLE_STEP_MS);
+      });
+    } else {
+      const order = pickHoppers(letters.current, lastHoppers.current);
+      lastHoppers.current = order;
+      // a letter only moves once it has finished flipping into the new style
+      let at = 0;
+      timers = order.map((idx, k) => {
+        at = Math.max(HOP_START_MS + k * HOP_GAP_MS, idx * 110 + 700, at + HOP_GAP_MS);
+        return window.setTimeout(() => play(idx), at);
+      });
+    }
+    return () => timers.forEach((x) => window.clearTimeout(x));
+  }, [look, phase, reduced, first, last]);
 
   const letters = useRef<HTMLSpanElement[]>([]);
   const frame = useRef(0);
   useEffect(() => () => cancelAnimationFrame(frame.current), []);
 
-  // Once the name has landed, the board keeps flipping between its two sides.
-  // After the story the letters dance in colourful, so the first flip is to white.
+  // Once the name has landed, the board keeps flipping through its letter styles.
+  // After the story the letters dance in colour, so the next flip is to black and white.
   useEffect(() => {
     if (reduced || phase === 'story') return;
-    let every = 0;
-    const flip = () => setColourful((c) => !c);
-    const start = window.setTimeout(
-      () => {
-        flip();
-        every = window.setInterval(flip, FLIP_EVERY_MS);
-      },
-      // dance: about 2.5s of jumping, then a few seconds to enjoy the colours
-      phase === 'dance' ? 2500 + 3500 : 2200,
-    );
-    return () => {
-      window.clearTimeout(start);
-      window.clearInterval(every);
+    let timer = 0;
+    const flip = () => {
+      // picked outside the state setter, so each flip draws from the bag exactly once
+      current.current = isColour(current.current) ? nextMono.current() : nextColour.current();
+      setShown(current.current);
+      timer = window.setTimeout(flip, isColour(current.current) ? COLOUR_STAYS_MS : FLIP_EVERY_MS);
     };
-  }, [phase, reduced]);
+    // dance: about 2.5s of jumping, then the colours stay for their hops
+    timer = window.setTimeout(flip, phase === 'dance' ? COLOUR_STAYS_MS : 2200);
+    return () => window.clearTimeout(timer);
+  }, [phase, reduced, first, last]);
 
   // How each tile jumps home, calmly: one easy hop from a spot not far off,
   // then a little bounce on its tile, with a soft squash on each landing.
@@ -190,7 +318,15 @@ export default function Intro() {
             onPointerDown={(e) => squash(e.currentTarget)}
             onAnimationEnd={(e) => e.currentTarget.classList.remove('is-squashed')}
           >
-            <FlapTile ch={ch} colourful={colourful && !reduced} index={idx} fill={c.fill} edge={c.edge} />
+            <span
+              className="inline-block"
+              style={{ transformOrigin: '50% 100%' }}
+              ref={(el) => {
+                if (el) movers.current[idx] = el;
+              }}
+            >
+              <FlapTile ch={ch} look={look} index={idx} fill={c.fill} edge={c.edge} />
+            </span>
           </span>
         </span>
       );
@@ -261,7 +397,8 @@ export default function Intro() {
         <IntroStory
           onPop={() => {
             // the colourful letters are the ones that jump around
-            setColourful(true);
+            current.current = 'colour';
+            setShown('colour');
             setPhase('dance');
           }}
           onDone={finishIntro}

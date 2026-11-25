@@ -36,7 +36,7 @@ export default function Research() {
   const go = (i: number) => setPage((i + research.length) % research.length);
 
   return (
-    <section id="research" data-section="research" className="py-16 sm:py-24 px-6 sm:px-10 max-w-5xl mx-auto">
+    <section id="research" data-section="research" className="pt-10 sm:pt-14 pb-16 sm:pb-24 px-6 sm:px-10 max-w-5xl mx-auto">
       <SectionHead no="03" title="Academic Research" />
 
       <div className={`notebook relative mx-auto max-w-4xl ${open ? 'is-open' : ''}`}>

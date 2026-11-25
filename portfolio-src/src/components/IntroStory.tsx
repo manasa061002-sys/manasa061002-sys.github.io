@@ -76,14 +76,15 @@ type FlaskState = 'flask' | 'ingredients' | 'chemx';
  * ask: the story waits here for the visitor to choose: skip or stay.
  * cheer: a big happy shout that pops in whole (not typed), and she jumps for joy.
  */
-type Scene = { text?: string; prop?: Prop; mood?: 'happy' | 'flustered'; hold?: number; ask?: boolean; cheer?: boolean };
+type Scene = { text?: string; prop?: Prop; mood?: 'happy' | 'flustered'; hold?: number; ask?: boolean; cheer?: boolean; typeMs?: number; readMs?: number };
 
 // The script (her words; punctuation tidied), one sentence to a speech bubble.
 const SCENES: Scene[] = [
   { hold: 2600 }, // she draws herself
   { text: 'Hi, thank you for waking me up!' },
-  { text: "I'll take you on a tour of Manasa's life." },
-  { text: 'Do you want to skip the dramatics, or would you like to stay? (Pls stayy 🥹)', ask: true },
+  { text: "I'll take you on a tour of Manasa's life.", readMs: 800 },
+  // the question types out quicker, so the choice comes sooner
+  { text: 'Do you want to skip the dramatics, or would you like to stay? (Pls stayy 🥹)', ask: true, typeMs: 16 },
   { text: 'Yaayyy!', cheer: true, hold: 1400 }, // only reached by "I'll stay"
   { text: "Who is Manasa, you're asking?", prop: 'flask' },
   { text: "She's a bit of sugar, spice and everything nice.", prop: 'ingredients' },
@@ -99,16 +100,16 @@ const SCENES: Scene[] = [
 
 const TYPE_MS = 30; // per character
 const READ_MS = 1500; // after the line is typed
-const sceneMs = (s: Scene) => s.hold ?? (s.text ? s.text.length * TYPE_MS + READ_MS : 1200);
+const sceneMs = (s: Scene) => s.hold ?? (s.text ? s.text.length * (s.typeMs ?? TYPE_MS) + (s.readMs ?? READ_MS) : 1200);
 
 /** Text that types itself out. */
-function Typed({ text }: { text: string }) {
+function Typed({ text, ms = TYPE_MS }: { text: string; ms?: number }) {
   const [n, setN] = useState(0);
   useEffect(() => {
     setN(0);
-    const t = window.setInterval(() => setN((x) => (x >= text.length ? x : x + 1)), TYPE_MS);
+    const t = window.setInterval(() => setN((x) => (x >= text.length ? x : x + 1)), ms);
     return () => window.clearInterval(t);
-  }, [text]);
+  }, [text, ms]);
   return (
     <>
       <span aria-hidden>{text.slice(0, n)}</span>
@@ -311,12 +312,12 @@ export default function IntroStory({ onPop, onDone, onSkip }: { onPop: () => voi
           <div className="intro-side" style={popped ? { visibility: 'hidden' } : undefined}>
             {s.text && !popped && (
               <p key={scene} className={`doodle-bubble intro-bubble-box ${s.cheer ? 'is-cheer' : ''}`} aria-live="polite">
-                {s.cheer ? s.text : <Typed text={s.text} />}
+                {s.cheer ? s.text : <Typed text={s.text} ms={s.typeMs} />}
               </p>
             )}
             {s.ask && !popped && (
               // the two answers come in once she has finished asking
-              <div className="intro-choices" style={{ ['--after' as string]: `${s.text!.length * TYPE_MS}ms` }} onClick={(e) => e.stopPropagation()}>
+              <div className="intro-choices" style={{ ['--after' as string]: `${s.text!.length * (s.typeMs ?? TYPE_MS)}ms` }} onClick={(e) => e.stopPropagation()}>
                 <button ref={stay} type="button" className="intro-choice is-stay" onClick={() => setScene((x) => x + 1)}>
                   I'll stay
                 </button>

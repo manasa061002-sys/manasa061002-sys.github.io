@@ -33,7 +33,7 @@ export default function Skills() {
       id="skills"
       data-section="skills"
       ref={ref}
-      className="relative isolate overflow-x-clip py-16 sm:py-24 px-6 sm:px-10 max-w-5xl mx-auto"
+      className="relative isolate overflow-x-clip pt-14 pb-10 sm:pt-[88px] sm:pb-14 px-6 sm:px-10 max-w-5xl mx-auto"
     >
       <NaiveDoodle kind="squiggle" className="right-0 top-28 w-10" />
       <NaiveDoodle kind="heart" className="left-0 top-[60%] w-9" delay={0.3} />

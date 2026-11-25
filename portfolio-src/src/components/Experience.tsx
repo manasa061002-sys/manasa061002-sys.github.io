@@ -134,7 +134,7 @@ export default function Experience() {
       id="experience"
       data-section="experience"
       ref={ref}
-      className="relative overflow-x-clip py-16 sm:py-24 px-6 sm:px-10 max-w-5xl mx-auto"
+      className="relative overflow-x-clip py-10 sm:py-14 px-6 sm:px-10 max-w-5xl mx-auto"
     >
       <SectionHead no="02" title="Work Experience" scribble="the day jobs ↓" />
 

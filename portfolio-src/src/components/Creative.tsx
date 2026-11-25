@@ -41,7 +41,7 @@ export default function Creative() {
       id="creative"
       data-section="creative"
       ref={ref}
-      className="zone-keep desk relative overflow-x-clip py-16 sm:py-24"
+      className="zone-keep desk relative overflow-x-clip py-10 sm:py-14"
     >
       {/* ruler ticks along the top edge of the mat */}
       <div className="desk-ruler absolute top-0 inset-x-0 h-3" aria-hidden />

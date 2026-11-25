@@ -10,6 +10,10 @@ import SpiderGame from '@/components/SpiderGame';
 import '@fontsource/caveat/latin-500.css';
 // The bubbly letters on the colourful side of the name board.
 import '@fontsource/fredoka/latin-600.css';
+// The name board's other letter styles: blackletter, drippy paint, a fat serif.
+import '@fontsource/pirata-one/latin-400.css';
+import '@fontsource/rubik-wet-paint/latin-400.css';
+import '@fontsource/abril-fatface/latin-400.css';
 
 // Everything below the hero arrives as its own chunk and mounts section by section.
 const Below = lazy(() => import('./Below'));

@@ -293,13 +293,16 @@ export default function About() {
       id="about"
       data-section="about"
       ref={ref}
-      className="pt-28 sm:pt-32 pb-12 sm:pb-16 px-6 sm:px-10 max-w-5xl mx-auto"
+      className="pt-28 sm:pt-32 pb-10 sm:pb-14 px-6 sm:px-10 max-w-5xl mx-auto"
     >
       <div className="grid lg:grid-cols-[1.3fr_1fr] gap-12 lg:gap-20 items-start">
         {/* Left: identity */}
         <div>
           {/* The name is set large once, in the welcome screen; About opens with the positioning. */}
-          <SectionHead no="01" title="About" lead={profile.positioning} />
+          <SectionHead no="01" title="About" />
+          <p className="-mt-4 sm:-mt-6 mb-10 text-3xl sm:text-5xl font-medium tracking-tight leading-[1.08] text-white">
+            {profile.positioning}
+          </p>
 
           <div className="flex flex-wrap gap-2">
             {profile.roles.map((r) => (

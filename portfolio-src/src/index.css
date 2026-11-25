@@ -79,12 +79,12 @@
 /* inside the research notebook (paper on the dark half) highlighted words stay black */
 .notebook-page ::selection,
 .notebook-page::selection {
-  background: rgba(236, 72, 153, 0.25);
+  background: rgba(84, 98, 120, 0.4);
   color: #111;
   -webkit-text-fill-color: #111;
 }
 .notebook-page ::-moz-selection {
-  background: rgba(236, 72, 153, 0.25);
+  background: rgba(84, 98, 120, 0.4);
   color: #111;
 }
 
@@ -1305,13 +1305,78 @@ section[id] {
   background: rgb(0 0 0 / 0.75);
 }
 .nflap-char { display: inline-block; transform-origin: 50% 50%; color: #fff; font: 600 1em/1 'Inter', ui-sans-serif, system-ui, sans-serif; }
-.nflap.is-colourful .nflap-char {
+.nflap { transition: background-color 0.5s ease, box-shadow 0.5s ease; }
+/* the name board flaps softer and slower than the small labels */
+.nflap .flap-anim { animation: nflapTurn 0.22s cubic-bezier(0.2, 0.7, 0.3, 1); }
+@keyframes nflapTurn {
+  from { transform: rotateX(70deg); opacity: 0.25; filter: blur(0.01em); }
+  to { transform: none; opacity: 1; filter: none; }
+}
+/* colourful: bubbly letters with an offset edge */
+.nflap[data-look='colour'] .nflap-char {
   color: var(--fill);
   font: 600 1.02em/1 'Fredoka', 'Inter', sans-serif;
   -webkit-text-stroke: 0.03em #1c1917;
   paint-order: stroke fill;
   text-shadow: 0.06em 0.05em 0 var(--edge);
 }
+/* candy: stripes inside a black outline */
+.nflap[data-look='candy'] .nflap-char {
+  font: 600 1.02em/1 'Fredoka', 'Inter', sans-serif;
+  color: transparent;
+  background: repeating-linear-gradient(-45deg, var(--fill) 0 0.07em, #fff 0.07em 0.13em, var(--edge) 0.13em 0.2em, #fff 0.2em 0.26em);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 0.025em #1c1917;
+}
+/* ransom note: every tile its own colour, every letter its own font */
+.nflap[data-look='ransom'][data-v='0'] { background: #a66ce8; }
+.nflap[data-look='ransom'][data-v='1'] { background: #ff4f8b; }
+.nflap[data-look='ransom'][data-v='2'] { background: #ffa41c; }
+.nflap[data-look='ransom'][data-v='3'] { background: #2f2fd6; }
+.nflap[data-look='ransom'] .nflap-char { color: #111; font: 700 0.95em/1 'Cormorant Garamond', serif; }
+.nflap[data-look='ransom'][data-v='1'] .nflap-char { color: #fff; font: 600 0.9em/1 'Fredoka', sans-serif; }
+.nflap[data-look='ransom'][data-v='2'] .nflap-char { font: italic 500 1em/1 'Cormorant Garamond', serif; }
+.nflap[data-look='ransom'][data-v='3'] .nflap-char { color: #ffa41c; font: 400 0.85em/1 'Abril Fatface', serif; }
+/* blackletter: black on paper */
+.nflap[data-look='gothic'] { background: #f4f1ea; }
+.nflap[data-look='gothic'] .nflap-char { color: #111; font: 400 0.98em/1 'Pirata One', serif; }
+/* white outline only, hollow, on the dark tiles */
+.nflap[data-look='outline'] .nflap-char { color: transparent; font: 600 1em/1 'Fredoka', 'Inter', sans-serif; -webkit-text-stroke: 0.03em #fff; }
+/* colourful letters with white lines down them, a black outline round each */
+.nflap[data-look='lines'] .nflap-char {
+  font: 600 1.02em/1 'Fredoka', 'Inter', sans-serif;
+  color: transparent;
+  background: repeating-linear-gradient(90deg, var(--fill) 0 0.09em, #fff 0.09em 0.12em);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 0.025em #1c1917;
+}
+/* dripping paint: pink on deep purple */
+.nflap[data-look='drip'] { background: #3d1f55; }
+.nflap[data-look='drip'] .nflap-char { color: #f25aa6; font: 400 0.9em/1 'Rubik Wet Paint', 'Fredoka', sans-serif; }
+/* polka dots inside a black outline */
+.nflap[data-look='dots'] .nflap-char {
+  font: 600 1.02em/1 'Fredoka', 'Inter', sans-serif;
+  color: transparent;
+  background: radial-gradient(circle, #fff 0 0.028em, transparent 0.034em) 0 0 / 0.11em 0.11em, var(--edge);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-stroke: 0.025em #1c1917;
+}
+/* ornate: a fat black serif on white */
+.nflap[data-look='ornate'] { background: #fff; }
+.nflap[data-look='ornate'] .nflap-char { color: #111; font: 400 0.9em/1 'Abril Fatface', serif; }
+/* black with white lines through it, on white */
+.nflap[data-look='scandi'] { background: #fff; }
+.nflap[data-look='scandi'] .nflap-char {
+  font: 600 1em/1 'Fredoka', 'Inter', sans-serif;
+  color: transparent;
+  background: repeating-linear-gradient(0deg, #111 0 0.13em, #fff 0.13em 0.15em);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+
 
 
 /* the story: a quiet hint that a tap moves things along */

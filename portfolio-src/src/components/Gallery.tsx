@@ -178,7 +178,7 @@ export default function Gallery() {
   const open = (src: string) => setActive(itemFor(src));
 
   return (
-    <section id="life" data-section="life" ref={ref} className="relative overflow-x-clip pt-16 sm:pt-24 pb-10 sm:pb-14 px-6 sm:px-10 max-w-5xl mx-auto">
+    <section id="life" data-section="life" ref={ref} className="relative overflow-x-clip pt-10 sm:pt-14 pb-10 sm:pb-14 px-6 sm:px-10 max-w-5xl mx-auto">
       {/* Lucy the cat strolls along each row, stops to lick a letter or a photo, then hops down. */}
       <Roamer
         mode="crawl"
